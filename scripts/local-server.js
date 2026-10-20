@@ -34,7 +34,7 @@ const server = http.createServer((req, res) => {
     let pathname = decodeURIComponent(parsedUrl.pathname);
     if (pathname === '/') pathname = '/index.html';
 
-    let filePath = path.join(__dirname, pathname);
+    let filePath = path.join(__dirname, '..', pathname);
 
     fs.stat(filePath, (err, stats) => {
         if (err || !stats.isFile()) {
