@@ -2,7 +2,6 @@
   "name": "kusotv",
   "version": "1.0.0",
   "description": "KusoTV Live Sports & TV Streaming Web",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
@@ -13,6 +12,5 @@
     "hls",
     "dash"
   ],
-  "author": "",
   "license": "ISC"
 }
