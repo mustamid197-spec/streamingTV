@@ -65,8 +65,11 @@ Pada project ini, proteksi tersebut telah di-bypass secara bersih, sehingga web 
 streaming-tv/
 ├── index.html            # Halaman utama (desain, layout, sidebar & kontrol identik)
 ├── player.html           # Universal Player (Shaka DASH ClearKey DRM + HLS.js + Embed)
-├── server.js             # Local web server Node.js dengan CORS aktif
+├── scripts/
+│   └── local-server.js   # Local development web server Node.js dengan CORS aktif
 ├── package.json          # Script npm start
+├── vercel.json           # Konfigurasi static hosting Vercel
+├── .vercelignore         # Ignore server scripts dari build Vercel
 ├── css/
 │   ├── style.css         # Styling modern dark mode responsif dari KLTRATV
 │   ├── playermpd.css     # CSS player MPD
