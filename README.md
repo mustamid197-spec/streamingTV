@@ -89,14 +89,14 @@ streaming-tv/
 
 ## 🚀 Cara Menjalankan
 
-### Menggunakan Node.js (Disarankan)
+### Menggunakan Node.js (Lokal)
 1. Buka terminal di folder `streaming-tv`:
    ```bash
    npm start
    ```
    *Atau:*
    ```bash
-   node server.js
+   node local-server.js
    ```
 2. Buka browser dan akses:
    [http://localhost:3000](http://localhost:3000)

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "KusoTV Live Sports & TV Streaming Web",
   "scripts": {
-    "start": "node server.js"
+    "start": "node local-server.js"
   },
   "keywords": [
     "streaming",
