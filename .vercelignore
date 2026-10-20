@@ -1,6 +1,4 @@
-scripts/
-local-server.js
-server.js
-package.json
-package-lock.json
 node_modules/
+.git/
+.gitignore
+scripts/
