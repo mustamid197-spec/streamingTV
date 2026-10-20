@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>KusoTV HD Stream Player</title>
+    <!-- Shaka Player for DASH / MPD with ClearKey DRM -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.2/controls.min.css" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.2/shaka-player.ui.min.js" crossorigin="anonymous"></script>
+    <!-- HLS.js for HLS Streams -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { width: 100%; height: 100%; background: #000; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #fff; }
+        #player-container { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; }
+        video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+        .shaka-video-container { width: 100% !important; height: 100% !important; }
+        #embed-iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; display: none; }
+        .loading-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 10;
+            transition: opacity 0.3s;
+        }
+        .spinner {
+            width: 44px; height: 44px; border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #38bdf8; border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .status-text { font-size: 14px; color: #94a3b8; letter-spacing: 0.5px; }
+        .error-message { color: #f87171; max-width: 80%; text-align: center; font-size: 14px; margin-top: 8px; }
+
+        /* Standby Info Screen when accessed directly without params */
+        #standby-screen {
+            position: absolute; inset: 0; background: radial-gradient(circle at 50% 30%, #0f172a 0%, #020617 100%);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            padding: 24px; text-align: center; z-index: 20;
+        }
+        .badge {
+            background: rgba(56, 189, 248, 0.15); color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.3); font-size: 12px;
+            font-weight: 600; padding: 4px 12px; border-radius: 20px;
+            margin-bottom: 16px; letter-spacing: 1px; text-transform: uppercase;
+        }
+        .standby-title { font-size: 24px; font-weight: 700; margin-bottom: 10px; color: #f8fafc; }
+        .standby-desc { font-size: 14px; color: #94a3b8; max-width: 540px; line-height: 1.6; margin-bottom: 24px; }
+        .sample-buttons { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 580px; margin-bottom: 24px; }
+        .sample-btn {
+            background: rgba(30, 41, 59, 0.8); color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;
+            transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .sample-btn:hover { background: #0284c7; color: #fff; border-color: #38bdf8; }
+        .home-btn {
+            background: #2563eb; color: #fff; border: none; padding: 10px 20px;
+            border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer;
+            text-decoration: none; transition: background 0.2s;
+        }
+        .home-btn:hover { background: #1d4ed8; }
+    </style>
+</head>
+<body>
+    <div id="player-container">
+        <!-- Loading spinner -->
+        <div id="loading" class="loading-overlay">
+            <div class="spinner"></div>
+            <div id="status" class="status-text">Preparing stream...</div>
+            <div id="error" class="error-message" style="display:none;"></div>
+        </div>
+
+        <!-- Shaka Video Container -->
+        <div data-shaka-player-container style="width: 100%; height: 100%; display: none;" id="shaka-container">
+            <video data-shaka-player id="video" autoplay playsinline></video>
+        </div>
+
+        <!-- Fallback Iframe for third-party embeds -->
+        <iframe id="embed-iframe" allowfullscreen scrolling="no" allow="autoplay; encrypted-media; picture-in-picture"></iframe>
+
+        <!-- Standby Screen when opened without stream query -->
+        <div id="standby-screen">
+            <span class="badge">KusoTV Video Engine</span>
+            <h1 class="standby-title">Video Stream Player</h1>
+            <p class="standby-desc">
+                Halaman ini adalah internal video engine (Google Shaka DASH + ClearKey DRM &amp; HLS.js) yang dipanggil secara otomatis oleh frame di <b>index.html</b>. Untuk menonton langsung pertandingan olahraga atau TV, silakan buka halaman utama atau pilih saluran uji coba berikut:
+            </p>
+            <div class="sample-buttons">
+                <a class="sample-btn" href="player.html?channel=BEIN%201%20AU">▶ BEIN 1 AU</a>
+                <a class="sample-btn" href="player.html?channel=SPOTV%201%20PH">▶ SPOTV 1</a>
+                <a class="sample-btn" href="player.html?channel=A%20RCTI">▶ RCTI</a>
+                <a class="sample-btn" href="player.html?channel=A%20TRANS%207">▶ TRANS 7</a>
+                <a class="sample-btn" href="player.html?channel=A%20METROTV">▶ METRO TV</a>
+                <a class="sample-btn" href="player.html?channel=A%20KOMPASTV">▶ KOMPASTV</a>
+                <a class="sample-btn" href="player.html?channel=AD%20SPORTS%201">▶ AD SPORTS 1 (DRM)</a>
+            </div>
+            <a class="home-btn" href="index.html">← Buka Halaman Utama (KusoTV)</a>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        const statusEl = document.getElementById('status');
+        const errorEl = document.getElementById('error');
+        const loadingEl = document.getElementById('loading');
+        const shakaContainer = document.getElementById('shaka-container');
+        const video = document.getElementById('video');
+        const embedIframe = document.getElementById('embed-iframe');
+
+        function setStatus(msg) {
+            if (statusEl) statusEl.textContent = msg;
+        }
+
+        function showError(msg) {
+            if (errorEl) {
+                errorEl.textContent = msg;
+                errorEl.style.display = 'block';
+            }
+            if (statusEl) statusEl.textContent = 'Playback error';
+        }
+
+        function hideLoading() {
+            if (loadingEl) loadingEl.style.display = 'none';
+        }
+
+        // XOR Decrypt helper
+        const FEED_MATERIAL_V2 = (window.KLTRA_CONFIG && window.KLTRA_CONFIG.FEED_MATERIAL_V2) || "";
+        const KEY_BYTES = new TextEncoder().encode(FEED_MATERIAL_V2);
+
+        function decryptPayload(rawText) {
+            try {
+                // If it's already plain JSON
+                if (rawText.trim().startsWith('{') || rawText.trim().startsWith('[')) {
+                    return JSON.parse(rawText);
+                }
+                const binaryStr = atob(rawText.trim());
+                const out = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    out[i] = binaryStr.charCodeAt(i) ^ KEY_BYTES[i % KEY_BYTES.length];
+                }
+                return JSON.parse(new TextDecoder().decode(out));
+            } catch (err) {
+                console.warn('Decrypt failed:', err);
+                return null;
+            }
+        }
+
+        async function fetchCatalog(path, fallbackFile) {
+            const apiBase = (window.KLTRA_CONFIG && window.KLTRA_CONFIG.API_ORIGIN) || 'https://kltratv-web.pages.dev';
+            try {
+                const res = await fetch(apiBase + path + '?v=' + Date.now());
+                if (res.ok) {
+                    const text = await res.text();
+                    const data = decryptPayload(text);
+                    if (data) return data;
+                }
+            } catch (e) {
+                console.warn('API fetch failed, falling back to local file:', e);
+            }
+            try {
+                const localRes = await fetch(fallbackFile);
+                if (localRes.ok) {
+                    return await localRes.json();
+                }
+            } catch (e) {
+                console.error('Local fallback failed:', e);
+            }
+            return null;
+        }
+
+        async function playMpdStream(manifestUrl, drmConfig) {
+            shakaContainer.style.display = 'block';
+            shaka.polyfill.installAll();
+            if (!shaka.Player.isBrowserSupported()) {
+                showError('Browser does not support Shaka Player');
+                return;
+            }
+            const player = new shaka.Player(video);
+            window.player = player;
+
+            player.addEventListener('error', (event) => {
+                console.error('Shaka error:', event.detail);
+                showError('Stream error: ' + (event.detail.message || 'DRM or network failure'));
+            });
+
+            const config = {
+                streaming: {
+                    bufferingGoal: 10,
+                    rebufferingGoal: 2,
+                    bufferBehind: 15
+                }
+            };
+            if (drmConfig && drmConfig.clearKeys) {
+                config.drm = { clearKeys: drmConfig.clearKeys };
+            }
+            player.configure(config);
+
+            try {
+                await player.load(manifestUrl);
+                video.play().catch(() => {
+                    video.muted = true;
+                    video.play();
+                });
+                hideLoading();
+            } catch (e) {
+                console.error('Failed to load MPD:', e);
+                showError('Failed to load DASH manifest');
+            }
+        }
+
+        function playHlsStream(streamUrl) {
+            shakaContainer.style.display = 'block';
+            if (Hls.isSupported()) {
+                const hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true
+                });
+                window.hls = hls;
+                hls.loadSource(streamUrl);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    hideLoading();
+                    video.play().catch(() => {
+                        video.muted = true;
+                        video.play();
+                    });
+                });
+                hls.on(Hls.Events.ERROR, (event, data) => {
+                    console.warn('HLS error:', data);
+                    if (data.fatal) {
+                        switch (data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                hls.startLoad();
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                hls.recoverMediaError();
+                                break;
+                            default:
+                                hls.destroy();
+                                showError('Cannot play HLS stream');
+                                break;
+                        }
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = streamUrl;
+                video.addEventListener('loadedmetadata', () => {
+                    hideLoading();
+                    video.play();
+                });
+            } else {
+                showError('HLS not supported in this browser');
+            }
+        }
+
+        function playInEmbed(url) {
+            embedIframe.src = url;
+            embedIframe.style.display = 'block';
+            hideLoading();
+        }
+
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            const channel = params.get('channel');
+            const key = params.get('key');
+            let url = params.get('url');
+
+            // If accessed directly without any parameters, show Standby / Demo screen
+            if (!channel && !key && !url) {
+                hideLoading();
+                const standbyEl = document.getElementById('standby-screen');
+                if (standbyEl) standbyEl.style.display = 'flex';
+                return;
+            }
+
+            // 1. If key is provided, search zoro or usop
+            if (key) {
+                setStatus('Looking up stream server...');
+                const zoro = await fetchCatalog('/bro/zoro.json', './data/zoro.json');
+                if (zoro && Array.isArray(zoro)) {
+                    for (const item of zoro) {
+                        if (item.servers && Array.isArray(item.servers)) {
+                            const found = item.servers.find(s => s.key === key);
+                            if (found && found.url) {
+                                url = found.url;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. If channel is provided, lookup in usop
+            if (channel) {
+                setStatus('Connecting to channel ' + channel + '...');
+                const usop = await fetchCatalog('/bro/usop.json', './data/usop.json');
+                if (usop && usop[channel]) {
+                    const chData = usop[channel];
+                    if (chData.url && chData.url.includes('.mpd')) {
+                        const clearKeys = chData.drm || {};
+                        return playMpdStream(chData.url, { clearKeys });
+                    } else if (chData.url && chData.url.includes('.m3u8')) {
+                        return playHlsStream(chData.url);
+                    } else if (chData.url) {
+                        return playInEmbed(chData.url);
+                    }
+                }
+            }
+
+            // 3. If direct URL is provided or resolved from key
+            if (url) {
+                // Check if it's an embedded web player first
+                if (url.includes('online878.com') || url.includes('/live/index.html') || url.includes('/embed/')) {
+                    return playInEmbed(url);
+                } else if (url.includes('.mpd')) {
+                    return playMpdStream(url);
+                } else if (url.includes('.m3u8') || url.includes('m3u8')) {
+                    return playHlsStream(url);
+                } else {
+                    return playInEmbed(url);
+                }
+            }
+
+            showError('No valid stream parameter found (?channel, ?key, or ?url)');
+        }
+
+        init();
+    </script>
+</body>
+</html>
