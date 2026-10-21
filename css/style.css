@@ -364,7 +364,148 @@ body.dark-theme .toggle-thumb {
 }
 
 /* =========================================================
-   3. Filter Navigation Tabs (Exact PDF Colors)
+   3. Sports Category Filter Bar (Jenis Olahraga)
+   ========================================================= */
+.category-scroll-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 6px;
+    padding: 6px 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    box-shadow: var(--card-shadow);
+    margin-top: 2px;
+}
+
+/* Freeze Live Event Button on Left */
+.category-freeze {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-sub-bar);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 13.5px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.category-freeze:hover {
+    background: var(--badge-status-bg);
+    color: #ffffff;
+    border-color: var(--badge-status-bg);
+}
+
+.category-freeze.active {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    box-shadow: 0 0 10px rgba(2, 132, 199, 0.4);
+}
+
+body.dark-theme .category-freeze.active {
+    background: #0284c7;
+    border-color: #38bdf8;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+}
+
+.live-indicator {
+    font-size: 9px;
+    color: #ef4444;
+    animation: live-blink 1.2s infinite;
+}
+
+/* Scroll Arrow Buttons */
+.category-arrow-btn {
+    flex-shrink: 0;
+    width: 32px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-sub-bar);
+    color: var(--text-secondary);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-arrow-btn:hover {
+    background: var(--card-border);
+    color: var(--text-primary);
+}
+
+/* Horizontal Scroll Wrapper */
+.category-scroll-wrapper {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    display: flex;
+}
+
+.category-scroll-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+.category-buttons-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Individual Category Button */
+.category-button {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--bg-sub-bar);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.category-button:hover {
+    background: var(--badge-status-bg);
+    color: #ffffff;
+    border-color: var(--badge-status-bg);
+}
+
+.category-button.active {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: #1e293b;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-theme .category-button.active {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #38bdf8;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.35);
+}
+
+/* =========================================================
+   4. Filter Navigation Tabs (Exact PDF Colors)
    ========================================================= */
 .filter-tabs-nav {
     display: flex;
@@ -713,6 +854,30 @@ body.dark-theme .sub-channel {
         width: 52px;
         height: 52px;
         font-size: 18px;
+    }
+
+    /* Sports Category Bar on Mobile */
+    .category-scroll-container {
+        padding: 5px 6px;
+        gap: 5px;
+    }
+
+    .category-freeze {
+        padding: 7px 10px;
+        font-size: 12px;
+        gap: 5px;
+    }
+
+    .category-arrow-btn {
+        width: 28px;
+        height: 32px;
+        font-size: 11px;
+    }
+
+    .category-button {
+        padding: 6px 10px;
+        font-size: 12px;
+        gap: 5px;
     }
 
     /* Tabs: 2x2 Grid on Mobile for Perfect Symmetry & Zero Cutoff */

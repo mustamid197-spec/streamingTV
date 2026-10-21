@@ -1,6 +1,6 @@
 /**
  * KusoTV - Modern Sports Portal Application Logic
- * Supports Light & Dark Themes, Date Filtering, Live API Sync & Streaming
+ * Supports Light & Dark Themes, Sports Category Filtering, Date Filtering, Live API Sync & Streaming
  */
 
 (function () {
@@ -11,6 +11,7 @@
     let serverCatalog = {}; // r -> servers array
     let channelCatalog = [];
     let currentTab = 'today'; // 'today', 'tomorrow', 'yesterday', 'all'
+    let currentCategory = 'all'; // 'all', 'live', 'hot', 'Soccer', 'Basketball', 'Badminton', 'Baseball', 'Tennis'
     let currentPlayingMatch = null;
     let currentPlayingServerUrl = null;
 
@@ -44,6 +45,8 @@
         {
             id: 'mock-1',
             league: 'Liga Champions',
+            sport: 'Soccer',
+            isHot: true,
             team1: {
                 name: 'Galatasaray',
                 logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/432.png&w=80&h=80'
@@ -56,12 +59,14 @@
             commentator: 'Jawad Badah',
             channelName: 'beIN SPORTS 3',
             channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%203%20AU',
-            status: 'upcoming',
+            status: 'live',
             tabCategory: 'today'
         },
         {
             id: 'mock-2',
             league: 'Liga Champions',
+            sport: 'Soccer',
+            isHot: true,
             team1: {
                 name: 'Manchester United',
                 logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/360.png&w=80&h=80'
@@ -80,6 +85,8 @@
         {
             id: 'mock-3',
             league: 'Liga ORA',
+            sport: 'Soccer',
+            isHot: false,
             team1: {
                 name: 'Saluran',
                 logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/359.png&w=80&h=80'
@@ -98,6 +105,8 @@
         {
             id: 'mock-4',
             league: 'Liga Spanyol',
+            sport: 'Soccer',
+            isHot: true,
             team1: {
                 name: 'Atletik Bilbao',
                 logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/96.png&w=80&h=80'
@@ -116,6 +125,8 @@
         {
             id: 'mock-5',
             league: 'Liga Champions',
+            sport: 'Soccer',
+            isHot: true,
             team1: {
                 name: 'Gudang senjata',
                 logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/359.png&w=80&h=80'
@@ -134,6 +145,8 @@
         {
             id: 'mock-6',
             league: 'Liga Champions',
+            sport: 'Soccer',
+            isHot: true,
             team1: {
                 name: 'Leipzig',
                 logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/11420.png&w=80&h=80'
@@ -148,6 +161,46 @@
             channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%202%20AU',
             status: 'upcoming',
             tabCategory: 'today'
+        },
+        {
+            id: 'mock-7',
+            league: 'French Open',
+            sport: 'Badminton',
+            isHot: true,
+            team1: {
+                name: 'Ginting / Jojo',
+                logo: 'images/sportsicon/Soccer.png'
+            },
+            team2: {
+                name: 'Axelsen / Vitidsarn',
+                logo: 'images/sportsicon/Soccer.png'
+            },
+            timeStr: 'Pukul 15.00',
+            commentator: 'Owi / Butet',
+            channelName: 'SPOTV 1',
+            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=SPOTV%201%20PH',
+            status: 'live',
+            tabCategory: 'today'
+        },
+        {
+            id: 'mock-8',
+            league: 'NBA / Basketball',
+            sport: 'Basketball',
+            isHot: true,
+            team1: {
+                name: 'LA Lakers',
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/lal.png&w=80&h=80'
+            },
+            team2: {
+                name: 'Golden State Warriors',
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/gsw.png&w=80&h=80'
+            },
+            timeStr: 'Pukul 09.30',
+            commentator: 'Mike Breen',
+            channelName: 'beIN SPORTS 1',
+            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%201%20AU',
+            status: 'upcoming',
+            tabCategory: 'tomorrow'
         }
     ];
 
@@ -158,7 +211,6 @@
         const savedTheme = localStorage.getItem('kusotv_theme');
         const themeToggle = document.getElementById('theme-toggle');
         
-        // Default to light theme as in PDF mockup, unless dark was saved
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-theme');
         } else {
@@ -273,6 +325,20 @@
                 const minute = timeParts[1] || '00';
                 const formattedTime = `Pukul ${hour}.${minute}`;
 
+                // Extract Sport from icon or league name
+                let sport = 'Soccer';
+                const iconStr = String(item.icon || '');
+                const leagueStr = String(item.league || '');
+                if (/basketball/i.test(iconStr) || /basketball/i.test(leagueStr)) {
+                    sport = 'Basketball';
+                } else if (/badminton/i.test(iconStr) || /badminton/i.test(leagueStr)) {
+                    sport = 'Badminton';
+                } else if (/baseball/i.test(iconStr) || /baseball/i.test(leagueStr)) {
+                    sport = 'Baseball';
+                } else if (/tennis/i.test(iconStr) || /tennis/i.test(leagueStr)) {
+                    sport = 'Tennis';
+                }
+
                 // Determine tab category by match_date
                 let tabCat = 'all';
                 const mDate = item.match_date || item.kickoff_date || '';
@@ -283,7 +349,6 @@
                 } else if (mDate === yesterdayStr) {
                     tabCat = 'yesterday';
                 } else {
-                    // Spread across tabs so every tab has rich live matches
                     if (idx % 3 === 0) tabCat = 'today';
                     else if (idx % 3 === 1) tabCat = 'tomorrow';
                     else tabCat = 'yesterday';
@@ -297,20 +362,22 @@
                 allMatches.push({
                     id: item.id || `api-${idx}`,
                     league: item.league || 'Sepak Bola',
+                    sport: sport,
+                    isHot: idx < 3,
                     team1: {
                         name: item.team1?.name || 'Tim Tuan Rumah',
-                        logo: item.team1?.logo || 'https://s.q5qo.com/data/c181518f9c1b3f9bb8b83921ba89fc28.png'
+                        logo: item.team1?.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/432.png&w=80&h=80'
                     },
                     team2: {
                         name: item.team2?.name || 'Tim Tamu',
-                        logo: item.team2?.logo || 'https://s.q5qo.com/data/d2f6fb39f6cb00fbfefaa9ff81f1489e.png'
+                        logo: item.team2?.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/166.png&w=80&h=80'
                     },
                     timeStr: formattedTime,
                     commentator: comm,
                     channelName: chan,
                     channelUrl: chanUrl,
                     servers: servers,
-                    status: idx < 2 ? 'live' : 'upcoming', // first two live demo
+                    status: (idx === 0 || idx === 1) ? 'live' : 'upcoming',
                     tabCategory: tabCat
                 });
             });
@@ -333,24 +400,37 @@
         const container = document.getElementById('matches-container');
         if (!container) return;
 
-        // Filter based on active tab
-        let filtered = [];
-        if (currentTab === 'all') {
-            filtered = allMatches;
-        } else {
-            filtered = allMatches.filter(m => m.tabCategory === currentTab || m.tabCategory === 'today');
-            // If tab has fewer items, include more to keep view rich
-            if (filtered.length === 0) {
-                filtered = allMatches;
-            }
+        // Apply both Date Filter AND Sport Category Filter
+        let filtered = allMatches.filter(match => {
+            // 1. Date Filter
+            const dateMatches = (currentTab === 'all') || (match.tabCategory === currentTab) || (currentTab === 'today');
+            if (!dateMatches) return false;
+
+            // 2. Sport Category Filter
+            if (currentCategory === 'all') return true;
+            if (currentCategory === 'live') return match.status === 'live';
+            if (currentCategory === 'hot') return match.isHot || match.league.toLowerCase().includes('champions') || match.status === 'live';
+            
+            return (match.sport && match.sport.toLowerCase() === currentCategory.toLowerCase());
+        });
+
+        // Fallback if combination is too strict
+        if (filtered.length === 0) {
+            // Try matching only by category across all dates
+            filtered = allMatches.filter(match => {
+                if (currentCategory === 'all') return true;
+                if (currentCategory === 'live') return match.status === 'live';
+                if (currentCategory === 'hot') return match.isHot || match.league.toLowerCase().includes('champions');
+                return (match.sport && match.sport.toLowerCase() === currentCategory.toLowerCase());
+            });
         }
 
         if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="matches-empty">
                     <i class="far fa-calendar-times" style="font-size: 36px; margin-bottom: 12px; opacity: 0.6;"></i>
-                    <p>Tidak ada pertandingan yang terjadwal untuk kategori ini.</p>
-                    <button onclick="window.switchTab('all')">Lihat Semua Jadwal</button>
+                    <p>Tidak ada pertandingan untuk kategori <strong>${escapeHTML(currentCategory)}</strong>.</p>
+                    <button onclick="window.resetFilters()">Lihat Semua Pertandingan</button>
                 </div>
             `;
             return;
@@ -503,7 +583,53 @@
     }
 
     // =========================================================
-    // 6. Filter Tabs Click Handlers
+    // 6. Sports Category Bar Handlers
+    // =========================================================
+    function initSportsCategories() {
+        const liveBtn = document.getElementById('btn-live-event');
+        const arrowLeft = document.getElementById('cat-arrow-left');
+        const arrowRight = document.getElementById('cat-arrow-right');
+        const scrollWrapper = document.getElementById('category-scroll-wrapper');
+        const catButtons = document.querySelectorAll('.category-button');
+
+        // Freeze Live Event Button
+        if (liveBtn) {
+            liveBtn.addEventListener('click', () => {
+                setCategoryActive(liveBtn, 'live');
+            });
+        }
+
+        // Category Buttons
+        catButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const cat = btn.getAttribute('data-category');
+                setCategoryActive(btn, cat);
+            });
+        });
+
+        // Scroll Arrows
+        if (arrowLeft && scrollWrapper) {
+            arrowLeft.addEventListener('click', () => {
+                scrollWrapper.scrollBy({ left: -160, behavior: 'smooth' });
+            });
+        }
+        if (arrowRight && scrollWrapper) {
+            arrowRight.addEventListener('click', () => {
+                scrollWrapper.scrollBy({ left: 160, behavior: 'smooth' });
+            });
+        }
+    }
+
+    function setCategoryActive(activeEl, cat) {
+        currentCategory = cat;
+        // Uncheck all
+        document.querySelectorAll('.category-freeze, .category-button').forEach(b => b.classList.remove('active'));
+        if (activeEl) activeEl.classList.add('active');
+        renderMatches();
+    }
+
+    // =========================================================
+    // 7. Filter Tabs Click Handlers
     // =========================================================
     function initTabs() {
         const tabButtons = document.querySelectorAll('.filter-btn');
@@ -527,6 +653,18 @@
         renderMatches();
     };
 
+    window.resetFilters = function () {
+        currentTab = 'all';
+        currentCategory = 'all';
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-tab') === 'all');
+        });
+        document.querySelectorAll('.category-freeze, .category-button').forEach(b => {
+            b.classList.toggle('active', b.getAttribute('data-category') === 'all');
+        });
+        renderMatches();
+    };
+
     // Helper: Escape HTML
     function escapeHTML(str) {
         return String(str || '')
@@ -538,10 +676,11 @@
     }
 
     // =========================================================
-    // 7. Initialization
+    // 8. Initialization
     // =========================================================
     document.addEventListener('DOMContentLoaded', () => {
         initTheme();
+        initSportsCategories();
         initTabs();
 
         // Placeholder play button click -> play first match

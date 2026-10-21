@@ -87,7 +87,45 @@
             </div>
         </section>
 
-        <!-- 3. Filter Navigation Tabs (Exact PDF Colors) -->
+        <!-- 3. Sports Category Filter Bar (Jenis Olahraga) -->
+        <div class="category-scroll-container">
+            <button class="category-freeze active" id="btn-live-event" data-category="live">
+                <i class="fas fa-circle live-indicator"></i> Live Event
+            </button>
+            <button class="category-arrow-btn arrow-left" id="cat-arrow-left" aria-label="Scroll Kiri">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="category-scroll-wrapper" id="category-scroll-wrapper">
+                <div class="category-buttons-container" id="category-buttons">
+                    <button class="category-button" data-category="hot">
+                        <i class="fas fa-fire" style="color: #f97316;"></i> Hot Event
+                    </button>
+                    <button class="category-button" data-category="Soccer">
+                        <i class="fas fa-futbol" style="color: #10b981;"></i> Soccer
+                    </button>
+                    <button class="category-button" data-category="Basketball">
+                        <i class="fas fa-basketball-ball" style="color: #f59e0b;"></i> Basketball
+                    </button>
+                    <button class="category-button" data-category="Badminton">
+                        <i class="fas fa-feather-alt" style="color: #06b6d4;"></i> Badminton
+                    </button>
+                    <button class="category-button" data-category="Baseball">
+                        <i class="fas fa-baseball-ball" style="color: #ef4444;"></i> Baseball
+                    </button>
+                    <button class="category-button" data-category="Tennis">
+                        <i class="fas fa-table-tennis" style="color: #8b5cf6;"></i> Tennis
+                    </button>
+                    <button class="category-button" data-category="all">
+                        <i class="fas fa-th-large" style="color: #64748b;"></i> Semua
+                    </button>
+                </div>
+            </div>
+            <button class="category-arrow-btn arrow-right" id="cat-arrow-right" aria-label="Scroll Kanan">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- 4. Filter Navigation Tabs (Exact PDF Colors) -->
         <nav class="filter-tabs-nav" aria-label="Jadwal Navigasi">
             <div class="filter-tabs-left">
                 <button class="filter-btn btn-tomorrow" data-tab="tomorrow">
