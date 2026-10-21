@@ -1,166 +1,119 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KusoTV | Free Streaming Sports</title>
+    <title>KusoTV | Live Sports Streaming HD</title>
     
     <!-- ====== SEO META TAGS ====== -->
-    <meta name="description" content="Watch free live sports streaming in HD. Football, Basketball, Tennis, MotoGP, Formula 1 and more. No subscription needed. Stream now on KusoTV.">
-    <meta name="keywords" content="free sports streaming, live football stream, watch soccer online, HD sports stream, Premier League live, Champions League live, La Liga stream, Serie A live, NBA stream, MotoGP live, Formula 1 stream, free live TV sports">
+    <meta name="description" content="Nonton live sports streaming HD gratis tanpa langganan. Sepak bola Liga Champions, Liga Spanyol, Liga Inggris, dan olahraga dunia lainnya di KusoTV.">
+    <meta name="keywords" content="live sports streaming, nonton bola online, live football hd, Liga Champions live, Liga Spanyol stream, kusotv">
     <meta name="robots" content="index, follow">
     <meta name="author" content="KusoTV">
 
     <!-- ====== OPEN GRAPH ====== -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="KusoTV | Free Live Sports Streaming HD">
-    <meta property="og:description" content="Stream live sports for free in HD quality. Football, Basketball, MotoGP, F1 and more.">
+    <meta property="og:title" content="KusoTV | Live Sports Streaming HD">
+    <meta property="og:description" content="Nonton siaran langsung olahraga gratis kualitas HD di KusoTV.">
     <meta property="og:image" content="images/index.png">
 
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts & FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Stylesheet -->
+    <!-- Main Stylesheet -->
     <link rel="stylesheet" href="css/style.css">
 
     <!-- Config -->
     <script src="js/config.js"></script>
 </head>
 <body>
-    <div id="main-content">
-        <div class="video-container">
-            <div class="video-wrapper" id="video-wrapper-container">
-                <!-- Single View (default) -->
-                <div id="single-view" style="display: block;">
-                    <img alt="Video Placeholder" id="video-placeholder" src="images/index.png" style="width: 100%; height: 100%; object-fit: cover;">
-                    <div id="player"></div>
-                    <iframe id="video-iframe" src="about:blank" width="100%" height="100%" frameborder="0" allowfullscreen scrolling="no" allow="autoplay; encrypted-media; picture-in-picture" style="display:none;"></iframe>
-                    <div class="countdown-wrapper" id="countdown" style="display:none;">
-                        <div class="countdown-title">Event will start in:</div>
-                        <div class="countdown-timer"></div>
-                    </div>
-                </div>
-
-                <!-- Multi View (iframe dengan srcdoc) -->
-                <iframe id="multi-view-frame" style="display: none; width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0;" frameborder="0" allowfullscreen scrolling="no" allow="autoplay; encrypted-media; picture-in-picture"></iframe>
-            </div>
-        </div>
-
-        <div class="sidebar">
-            <!-- Menu-wrapper di atas -->
-            <div class="menu-wrapper-top">
-                <div class="category-scroll-container">
-                    <button class="category-freeze" onclick="showLiveEvent(true)">
-                        <i class="fas fa-circle live-indicator"></i> Live Event
-                    </button>
-                    <button class="category-arrow-btn arrow-left" onclick="scrollCategories('left')">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <div class="category-scroll-wrapper">
-                        <div id="category-buttons" class="category-buttons-container"></div>
-                    </div>
-                    <button class="category-arrow-btn arrow-right" onclick="scrollCategories('right')">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </div>
-            </div>
-          
-            <!-- 🔍 Search Bar -->
-            <div class="search-wrapper">
-                <div class="search-container">
-                    <div class="search-input-wrapper">
-                        <i class="fas fa-search search-icon"></i>
-                        <input 
-                            type="text" 
-                            id="event-search-input" 
-                            class="search-input" 
-                            placeholder="Search by league or team name..."
-                            autocomplete="off"
-                        >
-                        <button id="clear-search-btn" class="clear-search-btn" style="display: none;">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div id="search-result-count" class="search-result-count" style="display: none;"></div>
-                </div>
-            </div>
-
-            <div id="live-event" class="sidebar-content active">
-                <div id="content">
-                    <!-- Event cards akan diisi di sini -->
-                </div>
-            </div>
-
-            <div id="live-tv" class="sidebar-content">
-                <div id="content">
-                    <!-- Channel cards akan diisi di sini -->
-                </div>
-            </div>
-
-            <div id="chat" class="sidebar-content">
-                <iframe class="chat-iframe" data-src="https://www3.cbox.ws/box/?boxid=3538770&boxtag=Dn3dpG" title="KusoTV Chat" width="294px" height="645px" allowtransparency="yes" allow="autoplay" frameborder="0" marginheight="0" marginwidth="0" scrolling="auto"></iframe>
-                <div id="spacer"></div>
-            </div>  
-
-            <!-- Menu Bawah -->
-            <div class="menu-wrapper-bottom">
-                <div class="menu-container">
-                    <!-- Multi View -->
-                    <button class="menu-button multiview-button" onclick="toggleMultiView()">
-                        <i class="fas fa-th"></i> Multi View
-                    </button>
-                    <!-- Android TV -->
-                    <button class="menu-button androidtv-button" onclick="switchContent('live-tv')">
-                        <i class="fab fa-android"></i> Android TV
-                    </button>
-                    <!-- Chat -->
-                    <button class="menu-button chat-button" onclick="switchContent('chat')">
-                        <i class="fas fa-comments"></i> Chat
-                    </button>
-                    <!-- Saweria -->
-                    <button class="menu-button saweria-button" onclick="window.open('https://saweria.co/KltraTV', '_blank');">
-                        <i class="fa-solid fa-mug-hot"></i> Saweria
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Grid Selection -->
-    <div id="grid-selection-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-container-modern">
-            <div class="modal-header-modern">
-                <h3>Choose Multi-View Layout</h3>
-                <button class="modal-close-btn-modern" onclick="closeGridModal()">&#10005;</button>
+    <div class="app-container">
+        <!-- 1. Header (Logo & Dark Themes Toggle) -->
+        <header class="app-header">
+            <div class="logo-container">
+                <a href="/" class="logo-box" title="KusoTV Home">
+                    <span class="logo-text">Logo</span>
+                </a>
             </div>
             
-            <div class="modal-body-modern">
-                <!-- 2 Grid -->
-                <div class="grid-option-modern" data-grid="2" onclick="selectGrid(2)">
-                    <div class="grid-preview-modern grid-preview-2">
-                        <div class="grid-box-modern"></div>
-                        <div class="grid-box-modern"></div>
-                    </div>
-                    <div class="grid-label-modern">2 Grid</div>
-                    <div class="grid-subtitle-modern">Side by Side</div>
-                </div>
-                
-                <!-- 4 Grid -->
-                <div class="grid-option-modern" data-grid="4" onclick="selectGrid(4)">
-                    <div class="grid-preview-modern grid-preview-4">
-                        <div class="grid-box-modern"></div>
-                        <div class="grid-box-modern"></div>
-                        <div class="grid-box-modern"></div>
-                        <div class="grid-box-modern"></div>
-                    </div>
-                    <div class="grid-label-modern">4 Grid</div>
-                    <div class="grid-subtitle-modern">2&#215;2 Layout</div>
+            <div class="theme-toggle-wrapper" id="theme-toggle" title="Ganti Tema (Light / Dark)">
+                <span class="theme-label">dark themes</span>
+                <div class="toggle-switch">
+                    <span class="toggle-thumb"></span>
                 </div>
             </div>
-        </div>
+        </header>
+
+        <!-- 2. Video Player Section (16:9 Aspect Ratio) -->
+        <section class="player-section" id="player-section">
+            <div class="player-wrapper" id="player-wrapper">
+                <!-- Video Placeholder Banner -->
+                <div class="player-placeholder" id="player-placeholder" title="Klik untuk memutar siaran">
+                    <img src="images/index.png" alt="KusoTV Live Sports" id="placeholder-img">
+                    <div class="placeholder-overlay">
+                        <div class="play-pulse-btn">
+                            <i class="fas fa-play"></i>
+                        </div>
+                        <p class="placeholder-text">Klik salah satu pertandingan di bawah untuk menonton siaran</p>
+                    </div>
+                </div>
+
+                <!-- Video Iframe Player -->
+                <iframe 
+                    id="video-iframe" 
+                    src="about:blank" 
+                    frameborder="0" 
+                    allowfullscreen 
+                    scrolling="no" 
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    style="display: none;"
+                ></iframe>
+            </div>
+
+            <!-- Now Playing & Server Switch Bar -->
+            <div class="now-playing-bar" id="now-playing-bar" style="display: none;">
+                <div class="now-playing-info">
+                    <span class="live-dot"></span>
+                    <span class="playing-title" id="playing-title">Memutar Siaran Live</span>
+                </div>
+                <div class="server-chips" id="server-chips">
+                    <!-- Dynamic server buttons inserted here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Filter Navigation Tabs (Exact PDF Colors) -->
+        <nav class="filter-tabs-nav" aria-label="Jadwal Navigasi">
+            <div class="filter-tabs-left">
+                <button class="filter-btn btn-tomorrow" data-tab="tomorrow">
+                    Pertandingan besok
+                </button>
+                <button class="filter-btn btn-today active" data-tab="today">
+                    Pertandingan hari ini
+                </button>
+                <button class="filter-btn btn-yesterday" data-tab="yesterday">
+                    Pertandingan kemarin
+                </button>
+            </div>
+            <div class="filter-tabs-right">
+                <button class="filter-btn btn-all" data-tab="all">
+                    Jadwal pertandingan
+                </button>
+            </div>
+        </nav>
+
+        <!-- 4. Match Fixtures List -->
+        <main class="matches-container" id="matches-container">
+            <div class="matches-loading">
+                <i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Memuat jadwal pertandingan...
+            </div>
+        </main>
     </div>
 
-    <script src="js/testa.js"></script>
+    <!-- Application Controller -->
+    <script src="js/app.js"></script>
 </body>
 </html>
