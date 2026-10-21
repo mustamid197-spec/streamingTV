@@ -58,7 +58,7 @@
             timeStr: 'Pukul 19.45',
             commentator: 'Jawad Badah',
             channelName: 'beIN SPORTS 3',
-            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%203%20AU',
+            channelUrl: 'player.html?channel=BEIN%203%20AU',
             status: 'live',
             tabCategory: 'today'
         },
@@ -78,7 +78,7 @@
             timeStr: 'Pukul 19.45',
             commentator: 'Khalil Al Balushi',
             channelName: 'beIN SPORTS 2',
-            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%202%20AU',
+            channelUrl: 'player.html?channel=BEIN%202%20AU',
             status: 'upcoming',
             tabCategory: 'today'
         },
@@ -98,7 +98,7 @@
             timeStr: 'Jam 8:00 malam',
             commentator: 'Mohammed Al-Kawalini',
             channelName: 'ON Sport',
-            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%201%20AU',
+            channelUrl: 'player.html?channel=BEIN%201%20AU',
             status: 'upcoming',
             tabCategory: 'today'
         },
@@ -118,7 +118,7 @@
             timeStr: 'Jam 21.00',
             commentator: 'Abdullah Al-Ghamdi',
             channelName: 'beIN Xtra 1',
-            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%202%20AU',
+            channelUrl: 'player.html?channel=BEIN%202%20AU',
             status: 'upcoming',
             tabCategory: 'today'
         },
@@ -138,7 +138,7 @@
             timeStr: 'Pukul 22.00',
             commentator: 'Hafid Derradji',
             channelName: 'beIN SPORTS 1',
-            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%201%20AU',
+            channelUrl: 'player.html?channel=BEIN%201%20AU',
             status: 'upcoming',
             tabCategory: 'today'
         },
@@ -158,7 +158,7 @@
             timeStr: 'Pukul 22.00',
             commentator: 'Ali Saeed Al Kaabi',
             channelName: 'beIN SPORTS 2',
-            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%202%20AU',
+            channelUrl: 'player.html?channel=BEIN%202%20AU',
             status: 'upcoming',
             tabCategory: 'today'
         },
@@ -506,16 +506,30 @@
     function playMatch(match, targetUrl = null) {
         currentPlayingMatch = match;
 
-        // Pick URL
-        let streamUrl = targetUrl || match.channelUrl;
-        if (!streamUrl && match.servers && match.servers.length > 0) {
-            streamUrl = match.servers[0].url;
-        }
-
+        // Resolve direct stream URL to our internal engine
+        let streamUrl = targetUrl;
         if (!streamUrl) {
-            streamUrl = `player.html?name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
-        } else if (!streamUrl.includes('player.html')) {
-            streamUrl = `player.html?source=${encodeURIComponent(streamUrl)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+            if (match.channelUrl && match.channelUrl.startsWith('player.html')) {
+                streamUrl = match.channelUrl;
+            } else if (match.channelName) {
+                streamUrl = `player.html?channel=${encodeURIComponent(match.channelName)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+            } else if (match.servers && match.servers.length > 0) {
+                const s = match.servers[0];
+                if (s.key) {
+                    streamUrl = `player.html?key=${encodeURIComponent(s.key)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                } else if (s.url) {
+                    streamUrl = `player.html?url=${encodeURIComponent(s.url)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                }
+            } else if (match.channelUrl) {
+                const m = match.channelUrl.match(/channel=([^&]+)/);
+                if (m) {
+                    streamUrl = `player.html?channel=${m[1]}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                } else {
+                    streamUrl = `player.html?url=${encodeURIComponent(match.channelUrl)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                }
+            } else {
+                streamUrl = `player.html?channel=BEIN%201%20AU&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+            }
         }
 
         currentPlayingServerUrl = streamUrl;
@@ -535,16 +549,29 @@
 
         if (nowPlayingBar && playingTitle) {
             nowPlayingBar.style.display = 'flex';
-            playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} (${match.channelName})`;
+            playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} (${match.channelName || 'Live'})`;
         }
 
         // Render Server Chips
         if (serverChips) {
-            const availableServers = match.servers && match.servers.length > 0 ? match.servers : [
-                { label: match.channelName || 'Server HD 1', url: match.channelUrl },
-                { label: 'Server 2 HD', url: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%202%20AU' },
-                { label: 'Server 3 SD', url: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%203%20AU' }
-            ];
+            const defaultChan = match.channelName || 'BEIN 1 AU';
+            let availableServers = [];
+            if (match.servers && match.servers.length > 0) {
+                availableServers = match.servers.map((srv, idx) => {
+                    let sUrl = '';
+                    if (srv.key) sUrl = `player.html?key=${encodeURIComponent(srv.key)}`;
+                    else if (srv.url && (srv.url.includes('.mpd') || srv.url.includes('.m3u8'))) sUrl = `player.html?url=${encodeURIComponent(srv.url)}`;
+                    else sUrl = `player.html?channel=${encodeURIComponent(defaultChan)}`;
+                    return { label: srv.label || `Server ${idx + 1} HD`, url: sUrl };
+                });
+            } else {
+                availableServers = [
+                    { label: match.channelName || 'Server HD 1', url: streamUrl },
+                    { label: 'Server 2 HD', url: 'player.html?channel=BEIN%202%20AU' },
+                    { label: 'Server 3 SD', url: 'player.html?channel=BEIN%203%20AU' },
+                    { label: 'Server 4 SPOTV', url: 'player.html?channel=SPOTV%201%20PH' }
+                ];
+            }
 
             serverChips.innerHTML = availableServers.map((srv, i) => {
                 const sUrl = srv.url || streamUrl;

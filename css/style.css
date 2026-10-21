@@ -58,6 +58,16 @@ body.dark-theme {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+img, a, button {
+    -webkit-user-drag: none;
+    user-drag: none;
 }
 
 body {

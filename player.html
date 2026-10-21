@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer">
+    <!-- Favicon / Tab Icon -->
+    <link rel="icon" type="image/png" sizes="192x192" href="images/favicon.png">
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link rel="shortcut icon" type="image/png" href="images/logo.png">
+    <link rel="apple-touch-icon" href="images/logo.png">
     <title>KusoTV HD Stream Player</title>
     <!-- Shaka Player for DASH / MPD with ClearKey DRM -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.16.2/controls.min.css" crossorigin="anonymous">
@@ -73,7 +78,7 @@
 
         <!-- Shaka Video Container -->
         <div data-shaka-player-container style="width: 100%; height: 100%; display: none;" id="shaka-container">
-            <video data-shaka-player id="video" autoplay playsinline></video>
+            <video data-shaka-player id="video" autoplay playsinline controls></video>
         </div>
 
         <!-- Fallback Iframe for third-party embeds -->
@@ -100,6 +105,7 @@
     </div>
 
     <script src="js/config.js"></script>
+    <script src="js/security.js"></script>
     <script>
         const statusEl = document.getElementById('status');
         const errorEl = document.getElementById('error');
@@ -260,18 +266,71 @@
             hideLoading();
         }
 
+        function findChannelInUsop(usop, query) {
+            if (!usop || !query) return null;
+            const q = query.toLowerCase().trim();
+            if (usop[query]) return usop[query];
+            for (const k of Object.keys(usop)) {
+                if (k.toLowerCase() === q) return usop[k];
+            }
+            if (q.includes('bein') && q.includes('1')) return usop['BEIN 1 AU'];
+            if (q.includes('bein') && q.includes('2')) return usop['BEIN 2 AU'];
+            if (q.includes('bein') && q.includes('3')) return usop['BEIN 3 AU'];
+            if (q.includes('spotv') && q.includes('1')) return usop['SPOTV 1 PH'];
+            if (q.includes('spotv') && q.includes('2')) return usop['SPOTV 2 PH'];
+            if (q.includes('xtra')) return usop['BEIN 2 AU'];
+            if (q.includes('on sport')) return usop['BEIN 1 AU'];
+            for (const k of Object.keys(usop)) {
+                if (k.toLowerCase().includes(q) || q.includes(k.toLowerCase())) {
+                    return usop[k];
+                }
+            }
+            return usop['BEIN 1 AU'];
+        }
+
         async function init() {
             const params = new URLSearchParams(window.location.search);
-            const channel = params.get('channel');
+            let channel = params.get('channel');
             const key = params.get('key');
-            let url = params.get('url');
+            let url = params.get('url') || params.get('source');
 
-            // If accessed directly without any parameters, show Standby / Demo screen
-            if (!channel && !key && !url) {
-                hideLoading();
+            const isInsideIframe = (window.self !== window.top);
+
+            // If inside iframe, completely remove standby screen element so it never shows
+            if (isInsideIframe) {
                 const standbyEl = document.getElementById('standby-screen');
-                if (standbyEl) standbyEl.style.display = 'flex';
-                return;
+                if (standbyEl) standbyEl.remove();
+            }
+
+            // If url contains channel query parameter, extract channel
+            if (!channel && url && url.includes('channel=')) {
+                try {
+                    const parsed = new URL(url, window.location.href);
+                    channel = parsed.searchParams.get('channel');
+                    if (channel) url = null;
+                } catch (_) {
+                    const m = url.match(/channel=([^&]+)/);
+                    if (m) {
+                        channel = decodeURIComponent(m[1]);
+                        url = null;
+                    }
+                }
+            }
+
+            // If accessed directly without parameters outside iframe, show Standby screen
+            if (!channel && !key && !url) {
+                if (isInsideIframe) {
+                    // Inside player iframe: automatically stream primary live channel
+                    channel = 'BEIN 1 AU';
+                } else {
+                    hideLoading();
+                    const standbyEl = document.getElementById('standby-screen');
+                    if (standbyEl) standbyEl.style.display = 'flex';
+                    return;
+                }
+            } else {
+                const standbyEl = document.getElementById('standby-screen');
+                if (standbyEl) standbyEl.style.display = 'none';
             }
 
             // 1. If key is provided, search zoro or usop
@@ -295,8 +354,8 @@
             if (channel) {
                 setStatus('Connecting to channel ' + channel + '...');
                 const usop = await fetchCatalog('/bro/usop.json', './data/usop.json');
-                if (usop && usop[channel]) {
-                    const chData = usop[channel];
+                const chData = findChannelInUsop(usop, channel);
+                if (chData) {
                     if (chData.url && chData.url.includes('.mpd')) {
                         const clearKeys = chData.drm || {};
                         return playMpdStream(chData.url, { clearKeys });
@@ -310,7 +369,6 @@
 
             // 3. If direct URL is provided or resolved from key
             if (url) {
-                // Check if it's an embedded web player first
                 if (url.includes('online878.com') || url.includes('/live/index.html') || url.includes('/embed/')) {
                     return playInEmbed(url);
                 } else if (url.includes('.mpd')) {
@@ -322,8 +380,28 @@
                 }
             }
 
+            // Fallback inside iframe
+            if (isInsideIframe) {
+                const usop = await fetchCatalog('/bro/usop.json', './data/usop.json');
+                if (usop && usop['BEIN 1 AU']) {
+                    return playMpdStream(usop['BEIN 1 AU'].url, { clearKeys: usop['BEIN 1 AU'].drm || {} });
+                }
+            }
+
             showError('No valid stream parameter found (?channel, ?key, or ?url)');
         }
+
+        // Anti Right-Click & Anti Inspect for Player
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 123 || 
+               (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) ||
+               (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83))) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
 
         init();
     </script>
