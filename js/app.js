@@ -39,18 +39,18 @@
         'TNT Sports 1'
     ];
 
-    // Featured matches matching the user's PDF screenshot
+    // Featured matches matching the user's PDF screenshot with guaranteed high-res CDN logos
     const FEATURED_MOCK_MATCHES = [
         {
             id: 'mock-1',
             league: 'Liga Champions',
             team1: {
                 name: 'Galatasaray',
-                logo: 'https://s.q5qo.com/data/c181518f9c1b3f9bb8b83921ba89fc28.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/432.png&w=80&h=80'
             },
             team2: {
                 name: 'Klub Lille',
-                logo: 'https://s.q5qo.com/data/d2f6fb39f6cb00fbfefaa9ff81f1489e.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/166.png&w=80&h=80'
             },
             timeStr: 'Pukul 19.45',
             commentator: 'Jawad Badah',
@@ -64,11 +64,11 @@
             league: 'Liga Champions',
             team1: {
                 name: 'Manchester United',
-                logo: 'https://s.q5qo.com/data/0d8e20295eb1388dc823daeb8b8ef4d3.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/360.png&w=80&h=80'
             },
             team2: {
                 name: 'Como',
-                logo: 'https://s.q5qo.com/data/b9dfd82fb1f19d08e4ba4f5062c93836.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/2660.png&w=80&h=80'
             },
             timeStr: 'Pukul 19.45',
             commentator: 'Khalil Al Balushi',
@@ -82,11 +82,11 @@
             league: 'Liga ORA',
             team1: {
                 name: 'Saluran',
-                logo: 'https://s.q5qo.com/data/a51ff6bcaa9033d24b57343771c3f1b7.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/359.png&w=80&h=80'
             },
             team2: {
                 name: 'Al Ahly',
-                logo: 'https://s.q5qo.com/data/b2245bcf567fa75f11fb613301e81e4c.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/3067.png&w=80&h=80'
             },
             timeStr: 'Jam 8:00 malam',
             commentator: 'Mohammed Al-Kawalini',
@@ -100,11 +100,11 @@
             league: 'Liga Spanyol',
             team1: {
                 name: 'Atletik Bilbao',
-                logo: 'https://s.q5qo.com/data/88983a621b0102d8da25b7b4efa4042d.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/96.png&w=80&h=80'
             },
             team2: {
                 name: 'Levante',
-                logo: 'https://s.q5qo.com/data/484adf9a6eb1570a9f124b5ea29888c7.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/91.png&w=80&h=80'
             },
             timeStr: 'Jam 21.00',
             commentator: 'Abdullah Al-Ghamdi',
@@ -118,11 +118,11 @@
             league: 'Liga Champions',
             team1: {
                 name: 'Gudang senjata',
-                logo: 'https://s.q5qo.com/data/7e16250dc775c6366f01b73fe87e59b4.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/359.png&w=80&h=80'
             },
             team2: {
                 name: 'Bayern Munich',
-                logo: 'https://s.q5qo.com/data/e3515711be29e752b2de714fe4747937.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/132.png&w=80&h=80'
             },
             timeStr: 'Pukul 22.00',
             commentator: 'Hafid Derradji',
@@ -136,11 +136,11 @@
             league: 'Liga Champions',
             team1: {
                 name: 'Leipzig',
-                logo: 'https://s.q5qo.com/data/3cb5880dc3c1fa816f1c4ee00b8e9063.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/11420.png&w=80&h=80'
             },
             team2: {
                 name: 'Real Madrid',
-                logo: 'https://s.q5qo.com/data/209c13b29c9bb437b0d740eb7a371c6e.png'
+                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/86.png&w=80&h=80'
             },
             timeStr: 'Pukul 22.00',
             commentator: 'Ali Saeed Al Kaabi',
@@ -375,7 +375,7 @@
                     <!-- Upper: 3 Column Info -->
                     <div class="card-main">
                         <div class="team-left">
-                            <img src="${match.team1.logo}" class="team-logo" alt="${escapeHTML(match.team1.name)}" loading="lazy" onerror="this.src='https://s.q5qo.com/data/c181518f9c1b3f9bb8b83921ba89fc28.png'">
+                            <img src="${match.team1.logo}" class="team-logo" alt="${escapeHTML(match.team1.name)}" loading="lazy" onerror="this.onerror=null; this.src='images/sportsicon/Soccer.png'">
                             <span class="team-name">${escapeHTML(match.team1.name)}</span>
                         </div>
                         <div class="match-center">
@@ -384,7 +384,7 @@
                         </div>
                         <div class="team-right">
                             <span class="team-name">${escapeHTML(match.team2.name)}</span>
-                            <img src="${match.team2.logo}" class="team-logo" alt="${escapeHTML(match.team2.name)}" loading="lazy" onerror="this.src='https://s.q5qo.com/data/d2f6fb39f6cb00fbfefaa9ff81f1489e.png'">
+                            <img src="${match.team2.logo}" class="team-logo" alt="${escapeHTML(match.team2.name)}" loading="lazy" onerror="this.onerror=null; this.src='images/sportsicon/Soccer.png'">
                         </div>
                     </div>
 
