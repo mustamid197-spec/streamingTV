@@ -95,7 +95,7 @@ body {
     position: relative;
 }
 
-/* Logo Box matching PDF frame */
+/* Logo (Border removed, rebranded to KusoTV) */
 .logo-container {
     flex: 1;
     display: flex;
@@ -103,10 +103,8 @@ body {
     padding-left: 90px; /* Offset to center Logo visually against right switch */
 }
 
-.logo-box {
-    border: 2px solid var(--header-border);
-    padding: 4px 44px;
-    border-radius: 4px;
+.logo-link {
+    border: none;
     background: transparent;
     transition: all 0.25s ease;
     display: inline-flex;
@@ -115,17 +113,33 @@ body {
     text-decoration: none;
 }
 
-.logo-box:hover {
-    transform: translateY(-1px);
+.logo-link:hover {
+    transform: scale(1.04);
 }
 
-.logo-text {
-    font-size: 32px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+.logo-brand {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
     color: var(--text-primary);
     font-family: 'Inter', sans-serif;
     line-height: 1.1;
+    display: inline-flex;
+    align-items: center;
+}
+
+.logo-accent {
+    color: #0284c7;
+    background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-left: 2px;
+}
+
+body.dark-theme .logo-accent {
+    background: linear-gradient(135deg, #38bdf8 0%, #00bcd4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 /* Dark Themes Switch Pill matching PDF */
@@ -659,12 +673,8 @@ body.dark-theme .sub-channel {
         padding-left: 0;
     }
 
-    .logo-box {
-        padding: 3px 24px;
-    }
-
-    .logo-text {
-        font-size: 26px;
+    .logo-brand {
+        font-size: 28px;
     }
 
     .theme-toggle-wrapper {
