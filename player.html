@@ -176,6 +176,7 @@
         }
 
         async function playMpdStream(manifestUrl, drmConfig) {
+            if (embedIframe) { embedIframe.src = 'about:blank'; embedIframe.style.display = 'none'; }
             shakaContainer.style.display = 'block';
             shaka.polyfill.installAll();
             if (!shaka.Player.isBrowserSupported()) {
@@ -216,8 +217,12 @@
         }
 
         function playHlsStream(streamUrl) {
+            if (embedIframe) { embedIframe.src = 'about:blank'; embedIframe.style.display = 'none'; }
             shakaContainer.style.display = 'block';
             if (Hls.isSupported()) {
+                if (window.hls) {
+                    try { window.hls.destroy(); } catch (_) {}
+                }
                 const hls = new Hls({
                     enableWorker: true,
                     lowLatencyMode: true
@@ -244,7 +249,7 @@
                                 break;
                             default:
                                 hls.destroy();
-                                showError('Cannot play HLS stream');
+                                showError('Siaran sedang offline atau server sibuk. Silakan pilih Server lain.');
                                 break;
                         }
                     }
@@ -261,6 +266,13 @@
         }
 
         function playInEmbed(url) {
+            if (shakaContainer) shakaContainer.style.display = 'none';
+            if (video) {
+                try { video.pause(); video.src = ''; } catch (_) {}
+            }
+            if (window.hls) {
+                try { window.hls.destroy(); } catch (_) {}
+            }
             embedIframe.src = url;
             embedIframe.style.display = 'block';
             hideLoading();
@@ -369,7 +381,7 @@
 
             // 3. If direct URL is provided or resolved from key
             if (url) {
-                if (url.includes('online878.com') || url.includes('/live/index.html') || url.includes('/embed/')) {
+                if (url.includes('online878.com') || url.includes('/live/index.html') || url.includes('/embed/') || url.includes('/player/')) {
                     return playInEmbed(url);
                 } else if (url.includes('.mpd')) {
                     return playMpdStream(url);

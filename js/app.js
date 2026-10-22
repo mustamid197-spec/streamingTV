@@ -40,167 +40,105 @@
         'TNT Sports 1'
     ];
 
-    // Featured matches matching the user's PDF screenshot with guaranteed high-res CDN logos
-    const FEATURED_MOCK_MATCHES = [
+    // 24/7 Live Sports TV Channels with guaranteed high-availability streams
+    const FEATURED_SPORTS_CHANNELS = [
         {
-            id: 'mock-1',
-            league: 'Liga Champions',
+            id: 'tv-bein1',
+            league: 'beIN SPORTS 1 HD',
             sport: 'Soccer',
             isHot: true,
-            team1: {
-                name: 'Galatasaray',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/432.png&w=80&h=80'
-            },
-            team2: {
-                name: 'Klub Lille',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/166.png&w=80&h=80'
-            },
-            timeStr: 'Pukul 19.45',
-            commentator: 'Jawad Badah',
-            channelName: 'beIN SPORTS 3',
+            team1: { name: 'beIN SPORTS 1', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
+            team2: { name: 'Sepak Bola & Olahraga HD', logo: 'images/sportsicon/Soccer.png' },
+            timeStr: 'Live 24 Jam',
+            commentator: 'Sepak Bola Dunia & Liga Eropa',
+            channelName: 'BEIN 1 AU',
+            channelUrl: 'player.html?channel=BEIN%201%20AU',
+            status: 'live',
+            tabCategory: 'today'
+        },
+        {
+            id: 'tv-bein2',
+            league: 'beIN SPORTS 2 HD',
+            sport: 'Soccer',
+            isHot: true,
+            team1: { name: 'beIN SPORTS 2', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
+            team2: { name: 'Liga Spanyol & Liga Italia', logo: 'images/sportsicon/Soccer.png' },
+            timeStr: 'Live 24 Jam',
+            commentator: 'Sepak Bola Eropa & LaLiga',
+            channelName: 'BEIN 2 AU',
+            channelUrl: 'player.html?channel=BEIN%202%20AU',
+            status: 'live',
+            tabCategory: 'today'
+        },
+        {
+            id: 'tv-bein3',
+            league: 'beIN SPORTS 3 HD',
+            sport: 'Soccer',
+            isHot: true,
+            team1: { name: 'beIN SPORTS 3', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
+            team2: { name: 'Liga Champions & Formula 1', logo: 'images/sportsicon/Soccer.png' },
+            timeStr: 'Live 24 Jam',
+            commentator: 'UCL & Motorsport Dunia',
+            channelName: 'BEIN 3 AU',
             channelUrl: 'player.html?channel=BEIN%203%20AU',
             status: 'live',
             tabCategory: 'today'
         },
         {
-            id: 'mock-2',
-            league: 'Liga Champions',
-            sport: 'Soccer',
-            isHot: true,
-            team1: {
-                name: 'Manchester United',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/360.png&w=80&h=80'
-            },
-            team2: {
-                name: 'Como',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/2660.png&w=80&h=80'
-            },
-            timeStr: 'Pukul 19.45',
-            commentator: 'Khalil Al Balushi',
-            channelName: 'beIN SPORTS 2',
-            channelUrl: 'player.html?channel=BEIN%202%20AU',
-            status: 'upcoming',
-            tabCategory: 'today'
-        },
-        {
-            id: 'mock-3',
-            league: 'Liga ORA',
-            sport: 'Soccer',
-            isHot: false,
-            team1: {
-                name: 'Saluran',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/359.png&w=80&h=80'
-            },
-            team2: {
-                name: 'Al Ahly',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/3067.png&w=80&h=80'
-            },
-            timeStr: 'Jam 8:00 malam',
-            commentator: 'Mohammed Al-Kawalini',
-            channelName: 'ON Sport',
-            channelUrl: 'player.html?channel=BEIN%201%20AU',
-            status: 'upcoming',
-            tabCategory: 'today'
-        },
-        {
-            id: 'mock-4',
-            league: 'Liga Spanyol',
-            sport: 'Soccer',
-            isHot: true,
-            team1: {
-                name: 'Atletik Bilbao',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/96.png&w=80&h=80'
-            },
-            team2: {
-                name: 'Levante',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/91.png&w=80&h=80'
-            },
-            timeStr: 'Jam 21.00',
-            commentator: 'Abdullah Al-Ghamdi',
-            channelName: 'beIN Xtra 1',
-            channelUrl: 'player.html?channel=BEIN%202%20AU',
-            status: 'upcoming',
-            tabCategory: 'today'
-        },
-        {
-            id: 'mock-5',
-            league: 'Liga Champions',
-            sport: 'Soccer',
-            isHot: true,
-            team1: {
-                name: 'Gudang senjata',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/359.png&w=80&h=80'
-            },
-            team2: {
-                name: 'Bayern Munich',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/132.png&w=80&h=80'
-            },
-            timeStr: 'Pukul 22.00',
-            commentator: 'Hafid Derradji',
-            channelName: 'beIN SPORTS 1',
-            channelUrl: 'player.html?channel=BEIN%201%20AU',
-            status: 'upcoming',
-            tabCategory: 'today'
-        },
-        {
-            id: 'mock-6',
-            league: 'Liga Champions',
-            sport: 'Soccer',
-            isHot: true,
-            team1: {
-                name: 'Leipzig',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/11420.png&w=80&h=80'
-            },
-            team2: {
-                name: 'Real Madrid',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/86.png&w=80&h=80'
-            },
-            timeStr: 'Pukul 22.00',
-            commentator: 'Ali Saeed Al Kaabi',
-            channelName: 'beIN SPORTS 2',
-            channelUrl: 'player.html?channel=BEIN%202%20AU',
-            status: 'upcoming',
-            tabCategory: 'today'
-        },
-        {
-            id: 'mock-7',
-            league: 'French Open',
+            id: 'tv-spotv1',
+            league: 'SPOTV 1 HD',
             sport: 'Badminton',
             isHot: true,
-            team1: {
-                name: 'Ginting / Jojo',
-                logo: 'images/sportsicon/Soccer.png'
-            },
-            team2: {
-                name: 'Axelsen / Vitidsarn',
-                logo: 'images/sportsicon/Soccer.png'
-            },
-            timeStr: 'Pukul 15.00',
-            commentator: 'Owi / Butet',
-            channelName: 'SPOTV 1',
-            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=SPOTV%201%20PH',
+            team1: { name: 'SPOTV 1', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
+            team2: { name: 'MotoGP & BWF Badminton', logo: 'images/sportsicon/Soccer.png' },
+            timeStr: 'Live 24 Jam',
+            commentator: 'BWF Official & MotoGP HD',
+            channelName: 'SPOTV 1 PH',
+            channelUrl: 'player.html?channel=SPOTV%201%20PH',
             status: 'live',
             tabCategory: 'today'
         },
         {
-            id: 'mock-8',
-            league: 'NBA / Basketball',
-            sport: 'Basketball',
+            id: 'tv-spotv2',
+            league: 'SPOTV 2 HD',
+            sport: 'Tennis',
             isHot: true,
-            team1: {
-                name: 'LA Lakers',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/lal.png&w=80&h=80'
-            },
-            team2: {
-                name: 'Golden State Warriors',
-                logo: 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nba/500/gsw.png&w=80&h=80'
-            },
-            timeStr: 'Pukul 09.30',
-            commentator: 'Mike Breen',
-            channelName: 'beIN SPORTS 1',
-            channelUrl: 'https://playerkltra.pages.dev/playerhd?channel=BEIN%201%20AU',
-            status: 'upcoming',
-            tabCategory: 'tomorrow'
+            team1: { name: 'SPOTV 2', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
+            team2: { name: 'Tennis Grand Slam & Superbike', logo: 'images/sportsicon/Soccer.png' },
+            timeStr: 'Live 24 Jam',
+            commentator: 'WTA / ATP & World Superbike',
+            channelName: 'SPOTV 2 PH',
+            channelUrl: 'player.html?channel=SPOTV%202%20PH',
+            status: 'live',
+            tabCategory: 'today'
+        },
+        {
+            id: 'tv-rcti',
+            league: 'RCTI HD',
+            sport: 'Soccer',
+            isHot: true,
+            team1: { name: 'RCTI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/RCTI_logo_2015.svg/300px-RCTI_logo_2015.svg.png' },
+            team2: { name: 'Timnas Indonesia & Olahraga', logo: 'images/sportsicon/Soccer.png' },
+            timeStr: 'Live 24 Jam',
+            commentator: 'Siaran Nasional Indonesia',
+            channelName: 'A RCTI',
+            channelUrl: 'player.html?channel=A%20RCTI',
+            status: 'live',
+            tabCategory: 'today'
+        },
+        {
+            id: 'tv-trans7',
+            league: 'TRANS 7 HD',
+            sport: 'Soccer',
+            isHot: false,
+            team1: { name: 'TRANS 7', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Trans7_2013.svg/300px-Trans7_2013.svg.png' },
+            team2: { name: 'MotoGP & Ragam Olahraga', logo: 'images/sportsicon/Soccer.png' },
+            timeStr: 'Live 24 Jam',
+            commentator: 'Siaran Nasional Indonesia',
+            channelName: 'A TRANS 7',
+            channelUrl: 'player.html?channel=A%20TRANS%207',
+            status: 'live',
+            tabCategory: 'today'
         }
     ];
 
@@ -303,20 +241,10 @@
         // Build unified matches
         allMatches = [];
 
-        // 1. Add featured mock matches matching PDF
-        FEATURED_MOCK_MATCHES.forEach(m => allMatches.push(m));
-
-        // 2. Add real API matches
+        // 1. Add real API matches from luffyData
         if (luffyData && Array.isArray(luffyData)) {
-            const now = new Date();
-            const todayStr = getLocalDateString(now);
-            const yesterdayStr = getLocalDateString(new Date(now.getTime() - 86400000));
-            const tomorrowStr = getLocalDateString(new Date(now.getTime() + 86400000));
-
             luffyData.forEach((item, idx) => {
                 const servers = serverCatalog[item.r] || [];
-                const firstServer = servers[0] || null;
-                const channel = channelCatalog[idx % (channelCatalog.length || 1)] || null;
 
                 // Format time e.g. Pukul 19.45 or Jam 21.00
                 const rawTime = item.match_time || item.kickoff_time || '20:00';
@@ -325,63 +253,83 @@
                 const minute = timeParts[1] || '00';
                 const formattedTime = `Pukul ${hour}.${minute}`;
 
-                // Extract Sport from icon or league name
+                // Extract Sport from icon, league, or team name
                 let sport = 'Soccer';
-                const iconStr = String(item.icon || '');
-                const leagueStr = String(item.league || '');
-                if (/basketball/i.test(iconStr) || /basketball/i.test(leagueStr)) {
-                    sport = 'Basketball';
-                } else if (/badminton/i.test(iconStr) || /badminton/i.test(leagueStr)) {
+                const iconStr = String(item.icon || '').toLowerCase();
+                const leagueStr = String(item.league || '').toLowerCase();
+                const t1 = String(item.team1?.name || '').toLowerCase();
+                const t2 = String(item.team2?.name || '').toLowerCase();
+
+                if (iconStr.includes('badminton') || leagueStr.includes('badminton') || t1.includes('badminton') || t2.includes('badminton')) {
                     sport = 'Badminton';
-                } else if (/baseball/i.test(iconStr) || /baseball/i.test(leagueStr)) {
+                } else if (iconStr.includes('baseball') || leagueStr.includes('baseball') || leagueStr.includes('kbo')) {
                     sport = 'Baseball';
-                } else if (/tennis/i.test(iconStr) || /tennis/i.test(leagueStr)) {
+                } else if (iconStr.includes('basketball') || leagueStr.includes('basketball') || leagueStr.includes('kbl') || leagueStr.includes('nba')) {
+                    sport = 'Basketball';
+                } else if (iconStr.includes('tennis') || leagueStr.includes('tennis') || leagueStr.includes('wta') || leagueStr.includes('atp') || leagueStr.includes('open')) {
                     sport = 'Tennis';
                 }
 
-                // Determine tab category by match_date
-                let tabCat = 'all';
-                const mDate = item.match_date || item.kickoff_date || '';
-                if (mDate === todayStr) {
-                    tabCat = 'today';
-                } else if (mDate === tomorrowStr) {
-                    tabCat = 'tomorrow';
-                } else if (mDate === yesterdayStr) {
-                    tabCat = 'yesterday';
-                } else {
-                    if (idx % 3 === 0) tabCat = 'today';
-                    else if (idx % 3 === 1) tabCat = 'tomorrow';
-                    else tabCat = 'yesterday';
+                // Clean team names
+                let team1Name = (item.team1?.name || '').trim();
+                let team2Name = (item.team2?.name || '').trim();
+
+                if (!team1Name && team2Name.toLowerCase().includes('badminton')) {
+                    team1Name = 'French Open (Court 1 - 4)';
+                    team2Name = 'Live Match Stream';
+                } else if (!team1Name) {
+                    team1Name = 'Babak Penyisihan';
+                }
+                if (!team2Name) {
+                    team2Name = 'Babak Utama';
                 }
 
-                // Commentator and channel assignment
-                const comm = COMMENTATORS[idx % COMMENTATORS.length];
-                const chan = channel ? channel.name : CHANNELS[idx % CHANNELS.length];
-                const chanUrl = firstServer ? firstServer.url : (channel ? channel.url : '');
+                // Logos
+                const defaultLogo = (sport === 'Baseball' || sport === 'Basketball' || sport === 'Soccer')
+                    ? `images/sportsicon/${sport}.png`
+                    : 'images/sportsicon/Soccer.png';
+
+                const team1Logo = item.team1?.logo || defaultLogo;
+                const team2Logo = item.team2?.logo || defaultLogo;
+
+                // Tab distribution: live/ongoing in today, upcoming in tomorrow, past in yesterday
+                let tabCat = 'today';
+                if (idx >= 12) {
+                    tabCat = 'yesterday';
+                } else if (idx >= 7) {
+                    tabCat = 'tomorrow';
+                } else {
+                    tabCat = 'today';
+                }
+
+                const leagueLabel = item.league || `${sport} Tournament`;
+                const channelLabel = servers.length > 0 ? (servers[0].label || 'Server HD 1') : 'Live HD Stream';
 
                 allMatches.push({
                     id: item.id || `api-${idx}`,
-                    league: item.league || 'Sepak Bola',
+                    league: leagueLabel,
                     sport: sport,
-                    isHot: idx < 3,
+                    isHot: idx < 5,
                     team1: {
-                        name: item.team1?.name || 'Tim Tuan Rumah',
-                        logo: item.team1?.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/432.png&w=80&h=80'
+                        name: team1Name,
+                        logo: team1Logo
                     },
                     team2: {
-                        name: item.team2?.name || 'Tim Tamu',
-                        logo: item.team2?.logo || 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/soccer/500/166.png&w=80&h=80'
+                        name: team2Name,
+                        logo: team2Logo
                     },
                     timeStr: formattedTime,
-                    commentator: comm,
-                    channelName: chan,
-                    channelUrl: chanUrl,
+                    commentator: `${sport} Official Broadcast`,
+                    channelName: channelLabel,
                     servers: servers,
-                    status: (idx === 0 || idx === 1) ? 'live' : 'upcoming',
+                    status: (idx < 6) ? 'live' : 'upcoming',
                     tabCategory: tabCat
                 });
             });
         }
+
+        // 2. Add real 24/7 Live Sports TV Channels
+        FEATURED_SPORTS_CHANNELS.forEach(tv => allMatches.push(tv));
 
         renderMatches();
     }
@@ -403,13 +351,14 @@
         // Apply both Date Filter AND Sport Category Filter
         let filtered = allMatches.filter(match => {
             // 1. Date Filter
-            const dateMatches = (currentTab === 'all') || (match.tabCategory === currentTab) || (currentTab === 'today');
-            if (!dateMatches) return false;
+            if (currentTab !== 'all' && match.tabCategory !== currentTab) {
+                return false;
+            }
 
             // 2. Sport Category Filter
             if (currentCategory === 'all') return true;
             if (currentCategory === 'live') return match.status === 'live';
-            if (currentCategory === 'hot') return match.isHot || match.league.toLowerCase().includes('champions') || match.status === 'live';
+            if (currentCategory === 'hot') return match.isHot || match.status === 'live';
             
             return (match.sport && match.sport.toLowerCase() === currentCategory.toLowerCase());
         });
@@ -420,7 +369,7 @@
             filtered = allMatches.filter(match => {
                 if (currentCategory === 'all') return true;
                 if (currentCategory === 'live') return match.status === 'live';
-                if (currentCategory === 'hot') return match.isHot || match.league.toLowerCase().includes('champions');
+                if (currentCategory === 'hot') return match.isHot || match.status === 'live';
                 return (match.sport && match.sport.toLowerCase() === currentCategory.toLowerCase());
             });
         }
@@ -509,25 +458,25 @@
         // Resolve direct stream URL to our internal engine
         let streamUrl = targetUrl;
         if (!streamUrl) {
-            if (match.channelUrl && match.channelUrl.startsWith('player.html')) {
-                streamUrl = match.channelUrl;
-            } else if (match.channelName) {
-                streamUrl = `player.html?channel=${encodeURIComponent(match.channelName)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
-            } else if (match.servers && match.servers.length > 0) {
+            // 1. Direct servers from zoro.json (TOP PRIORITY for real matches)
+            if (match.servers && match.servers.length > 0) {
                 const s = match.servers[0];
-                if (s.key) {
-                    streamUrl = `player.html?key=${encodeURIComponent(s.key)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
-                } else if (s.url) {
+                if (s.url) {
                     streamUrl = `player.html?url=${encodeURIComponent(s.url)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                } else if (s.key) {
+                    streamUrl = `player.html?key=${encodeURIComponent(s.key)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
                 }
-            } else if (match.channelUrl) {
-                const m = match.channelUrl.match(/channel=([^&]+)/);
-                if (m) {
-                    streamUrl = `player.html?channel=${m[1]}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
-                } else {
-                    streamUrl = `player.html?url=${encodeURIComponent(match.channelUrl)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
-                }
-            } else {
+            } 
+            // 2. Direct player.html URL (e.g. for TV channels)
+            else if (match.channelUrl && match.channelUrl.startsWith('player.html')) {
+                streamUrl = match.channelUrl;
+            } 
+            // 3. Channel Name lookup (e.g. BEIN 1 AU, SPOTV 1 PH)
+            else if (match.channelName) {
+                streamUrl = `player.html?channel=${encodeURIComponent(match.channelName)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+            } 
+            // 4. Fallback default
+            else {
                 streamUrl = `player.html?channel=BEIN%201%20AU&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
             }
         }
@@ -559,23 +508,33 @@
             if (match.servers && match.servers.length > 0) {
                 availableServers = match.servers.map((srv, idx) => {
                     let sUrl = '';
-                    if (srv.key) sUrl = `player.html?key=${encodeURIComponent(srv.key)}`;
-                    else if (srv.url && (srv.url.includes('.mpd') || srv.url.includes('.m3u8'))) sUrl = `player.html?url=${encodeURIComponent(srv.url)}`;
-                    else sUrl = `player.html?channel=${encodeURIComponent(defaultChan)}`;
-                    return { label: srv.label || `Server ${idx + 1} HD`, url: sUrl };
+                    if (srv.url) {
+                        sUrl = `player.html?url=${encodeURIComponent(srv.url)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                    } else if (srv.key) {
+                        sUrl = `player.html?key=${encodeURIComponent(srv.key)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                    } else {
+                        sUrl = `player.html?channel=${encodeURIComponent(defaultChan)}`;
+                    }
+                    return { label: srv.label || `Server ${idx + 1}`, url: sUrl };
                 });
-            } else {
+            } else if (match.channelName) {
                 availableServers = [
-                    { label: match.channelName || 'Server HD 1', url: streamUrl },
+                    { label: 'Server 1 HD', url: streamUrl },
                     { label: 'Server 2 HD', url: 'player.html?channel=BEIN%202%20AU' },
                     { label: 'Server 3 SD', url: 'player.html?channel=BEIN%203%20AU' },
                     { label: 'Server 4 SPOTV', url: 'player.html?channel=SPOTV%201%20PH' }
+                ];
+            } else {
+                availableServers = [
+                    { label: 'Server 1 HD', url: streamUrl },
+                    { label: 'Server 2 HD', url: 'player.html?channel=BEIN%202%20AU' },
+                    { label: 'Server 3 SD', url: 'player.html?channel=BEIN%203%20AU' }
                 ];
             }
 
             serverChips.innerHTML = availableServers.map((srv, i) => {
                 const sUrl = srv.url || streamUrl;
-                const active = (i === 0) ? 'active' : '';
+                const active = (sUrl === streamUrl || (i === 0 && !targetUrl)) ? 'active' : '';
                 return `<button class="server-chip-btn ${active}" data-url="${escapeHTML(sUrl)}">${escapeHTML(srv.label || `Server ${i+1}`)}</button>`;
             }).join('');
 
