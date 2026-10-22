@@ -1,0 +1,142 @@
+[
+  {
+    "id": "55c3e94c-127e-4e46-8e52-77a15af8a2b8",
+    "duration": 20,
+    "league": "French Open Badminton Championships",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Badminton.png",
+    "team1": {
+      "name": "",
+      "logo": ""
+    },
+    "team2": {
+      "name": "Badminton",
+      "logo": "https://www.yonexifb.com/medias/articles/desktop-le-tirage-est-tombe-les-bleus-sont-fixes-picture-20261013123827.png"
+    },
+    "kickoff_date": "2026-10-22",
+    "kickoff_time": "17:00",
+    "match_date": "2026-10-22",
+    "match_time": "17:00",
+    "firstRow": 3,
+    "r": "rhAhtnXefYvhcqfGQc"
+  },
+  {
+    "id": "8bc13d8d-db14-4ecc-b9e9-d411dbc3c33e",
+    "duration": 4.25,
+    "league": "MotoGP: Red Bull Grand Prix of Australia",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Racing.png",
+    "team1": {
+      "name": "",
+      "logo": ""
+    },
+    "team2": {
+      "name": "Free Practice 1",
+      "logo": "https://images.fancode.com/skillup-uploads/cms-media/Grand-Prix-of-Australia-TV-BG.png?hash=eyJrZXkiOiJza2lsbHVwLXVwbG9hZHMvY21zLW1lZGlhL0dyYW5kLVByaXgtb2YtQXVzdHJhbGlhLVRWLUJHLnBuZyIsImVkaXRzIjp7InJlc2l6ZSI6eyJmaXQiOiJjb3ZlciIsIndpZHRoIjoxNjc4LCJoZWlnaHQiOjk0NH0sIndlYnAiOnsicXVhbGl0eSI6NjAsImxvc3NsZXNzIjpmYWxzZX19LCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIn0="
+    },
+    "kickoff_date": "2026-10-23",
+    "kickoff_time": "05:00",
+    "match_date": "2026-10-23",
+    "match_time": "04:45",
+    "firstRow": 46,
+    "r": "rqIQvOanMYCLXu9djU"
+  },
+  {
+    "id": "c934beb8-1004-4269-9499-5764641",
+    "duration": 3,
+    "league": "Brazilian Copa do Brasil Women",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
+    "team1": {
+      "name": "Fluminense FC RJ (W)",
+      "logo": "https://s.q5qo.com/data/56b04631aa0180a1fff286c7dda25d1.png"
+    },
+    "team2": {
+      "name": "CR Flamengo RJ (W)",
+      "logo": "https://s.q5qo.com/data/2de07b36104f09ab454b74a81f4dea4c.png"
+    },
+    "kickoff_date": "2026-10-23",
+    "kickoff_time": "05:00",
+    "match_date": "2026-10-23",
+    "match_time": "05:00",
+    "firstRow": 47,
+    "r": "r0xGATLcUs7XC7d3qC"
+  },
+  {
+    "id": "e88b6b56-c466-4cab-a792-5286949",
+    "duration": 3,
+    "league": "NBA",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Basketball.png",
+    "team1": {
+      "name": "Philadelphia 76ers",
+      "logo": "https://s.q5qo.com/data/d2814873bdb3cd0ffe71c7dd081831a1.png"
+    },
+    "team2": {
+      "name": "Cleveland Cavaliers",
+      "logo": "https://s.q5qo.com/data/4c2d46dfa18a7b5044be1ea89c116f70.png"
+    },
+    "kickoff_date": "2026-10-23",
+    "kickoff_time": "06:00",
+    "match_date": "2026-10-23",
+    "match_time": "06:00",
+    "firstRow": 48,
+    "r": "ruyBXOFuAzgVcqYVVl"
+  },
+  {
+    "id": "75744454-9260-430c-a15a-5744493",
+    "duration": 3,
+    "league": "Caribbean Club Championship Cup",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
+    "team1": {
+      "name": "Mount Pleasant FA",
+      "logo": "https://s.q5qo.com/data/a7f9ebc28bc6ec0854bf68dd40943a8e.png"
+    },
+    "team2": {
+      "name": "Club Sando",
+      "logo": "https://s.q5qo.com/data/cffa83b2fe3d08cc0e88f268ed6ceb82.png"
+    },
+    "kickoff_date": "2026-10-23",
+    "kickoff_time": "06:00",
+    "match_date": "2026-10-23",
+    "match_time": "06:00",
+    "firstRow": 49,
+    "r": "rqB3b5prpbgaFIhn81"
+  },
+  {
+    "id": "47afdec7-93fc-4d4e-ae14-5286950",
+    "duration": 3,
+    "league": "NBA",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Basketball.png",
+    "team1": {
+      "name": "Oklahoma City Thunder",
+      "logo": "https://s.q5qo.com/data/cad6fbf1291081679ee97b00912d614.png"
+    },
+    "team2": {
+      "name": "Denver Nuggets",
+      "logo": "https://s.q5qo.com/data/9cc2a436baa3e4c3d22c17067dc8cea8.png"
+    },
+    "kickoff_date": "2026-10-23",
+    "kickoff_time": "08:30",
+    "match_date": "2026-10-23",
+    "match_time": "08:30",
+    "firstRow": 50,
+    "r": "r633cGXdyrJpJsZCYG"
+  },
+  {
+    "id": "c1fae64d-2b1e-48f6-9d8a-d0d1b2a6d59d",
+    "duration": 10,
+    "league": "MotoGP: Red Bull Grand Prix of Australia",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Racing.png",
+    "team1": {
+      "name": "",
+      "logo": ""
+    },
+    "team2": {
+      "name": "Practice",
+      "logo": "https://images.fancode.com/skillup-uploads/cms-media/Grand-Prix-of-Australia-TV-BG.png?hash=eyJrZXkiOiJza2lsbHVwLXVwbG9hZHMvY21zLW1lZGlhL0dyYW5kLVByaXgtb2YtQXVzdHJhbGlhLVRWLUJHLnBuZyIsImVkaXRzIjp7InJlc2l6ZSI6eyJmaXQiOiJjb3ZlciIsIndpZHRoIjoxNjc4LCJoZWlnaHQiOjk0NH0sIndlYnAiOnsicXVhbGl0eSI6NjAsImxvc3NsZXNzIjpmYWxzZX19LCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIn0="
+    },
+    "kickoff_date": "2026-10-23",
+    "kickoff_time": "09:15",
+    "match_date": "2026-10-23",
+    "match_time": "09:00",
+    "firstRow": 51,
+    "r": "r52d2SIFuIXSOYuwNR"
+  }
+]

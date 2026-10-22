@@ -153,6 +153,17 @@
         }
 
         async function fetchCatalog(path, fallbackFile) {
+            // Try local file first (instant, self-hosted, plain JSON)
+            try {
+                const localRes = await fetch(fallbackFile + '?v=' + Date.now());
+                if (localRes.ok) {
+                    return await localRes.json();
+                }
+            } catch (e) {
+                console.warn('Local fetch failed, trying remote:', e);
+            }
+
+            // Fallback to remote API
             const apiBase = (window.KLTRA_CONFIG && window.KLTRA_CONFIG.API_ORIGIN) || 'https://kltratv-web.pages.dev';
             try {
                 const res = await fetch(apiBase + path + '?v=' + Date.now());
@@ -162,15 +173,7 @@
                     if (data) return data;
                 }
             } catch (e) {
-                console.warn('API fetch failed, falling back to local file:', e);
-            }
-            try {
-                const localRes = await fetch(fallbackFile);
-                if (localRes.ok) {
-                    return await localRes.json();
-                }
-            } catch (e) {
-                console.error('Local fallback failed:', e);
+                console.warn('API fetch failed:', e);
             }
             return null;
         }
@@ -290,6 +293,17 @@
             if (q.includes('bein') && q.includes('3')) return usop['BEIN 3 AU'];
             if (q.includes('spotv') && q.includes('1')) return usop['SPOTV 1 PH'];
             if (q.includes('spotv') && q.includes('2')) return usop['SPOTV 2 PH'];
+            if (q.includes('tnt') && q.includes('2')) return usop['TNT 2'];
+            if (q.includes('fancode')) return usop['FANCODE LALIGA'];
+            if (q.includes('nba') || q.includes('76ers') || q.includes('cavaliers')) {
+                for (const k of Object.keys(usop)) {
+                    if (k.toLowerCase().includes('76ers') || k.toLowerCase().includes('cavaliers')) {
+                        return usop[k];
+                    }
+                }
+            }
+            if (q.includes('rcti')) return usop['A RCTI'];
+            if (q.includes('trans 7') || q.includes('trans7')) return usop['A TRANS 7'];
             if (q.includes('xtra')) return usop['BEIN 2 AU'];
             if (q.includes('on sport')) return usop['BEIN 1 AU'];
             for (const k of Object.keys(usop)) {
@@ -345,10 +359,10 @@
                 if (standbyEl) standbyEl.style.display = 'none';
             }
 
-            // 1. If key is provided, search zoro or usop
+            // 1. If key is provided, search servers
             if (key) {
                 setStatus('Looking up stream server...');
-                const zoro = await fetchCatalog('/bro/zoro.json', './data/zoro.json');
+                const zoro = await fetchCatalog('/bro/f-b4d9037e.json', './data/servers.json');
                 if (zoro && Array.isArray(zoro)) {
                     for (const item of zoro) {
                         if (item.servers && Array.isArray(item.servers)) {
@@ -365,10 +379,11 @@
             // 2. If channel is provided, lookup in usop
             if (channel) {
                 setStatus('Connecting to channel ' + channel + '...');
-                const usop = await fetchCatalog('/bro/usop.json', './data/usop.json');
+                const usop = await fetchCatalog('/bro/f-60d8f3ab.json', './data/usop.json');
                 const chData = findChannelInUsop(usop, channel);
                 if (chData) {
-                    if (chData.url && chData.url.includes('.mpd')) {
+                    const hasDrm = chData.drm && Object.keys(chData.drm).length > 0;
+                    if (hasDrm || (chData.url && chData.url.includes('.mpd'))) {
                         const clearKeys = chData.drm || {};
                         return playMpdStream(chData.url, { clearKeys });
                     } else if (chData.url && chData.url.includes('.m3u8')) {

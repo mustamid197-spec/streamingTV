@@ -506,82 +506,10 @@
       "f3d73b3a9b89462ebf7911004ea3b3b9": "2e547a81ff90aa02648cb9e3f79e7339"
     }
   },
-  "direct-bein-monza-vs-cagliari-05f9f16732de": {
-    "url": "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/q4u5nwaogz/out/v1/18de6d3e65934f3a8de4358e69eab86c/cenc.mpd",
+  "philadelphia-76ers-vs-cleveland-cavaliers-cf4ff7a84dcb4e6ca233e48ce328732a": {
+    "url": "https://lpnba.akamaized.net/live-pz/p/hls-wvpr/g0022600006cle1000445phi/index.m3u8?start=2026-10-22T15%3A44%3A00.000Z&end=END&addUserInfo=1&State=GP&PostalCode=&Zip=&LatLongRadius=&ISO3166=&ads=mr&csid=nba.com_live_nba-tv_web&afid=&prof=%3Anba_web_video&pcaid=nba-tv_live_default_asset&mcaid=&bo=no&_fw_vcid2=&_fw_gdpr=1&_fw_gdpr_consent=&_fw_us_privacy=1---&_fw_is_lat=0&_is_lat=0&_fw_ae=&_fw_h_user_agent=Mozilla%252F5.0%2520(Windows%2520NT%252010.0%253B%2520Win64%253B%2520x64)%2520AppleWebKit%252F537.36%2520(KHTML%252C%2520like%2520Gecko)%2520Chrome%252F106.0.0.0%2520Safari%252F537.36&dai-debug=false&sessionId=12b150a0-9304-48e7-991c-02be88aa4689",
     "drm": {
-      "7995c724a13748ed970840a8ab5bb9b3": "67bdaf1e2175b9ff682fcdf0e2354b1e"
-    }
-  },
-  "direct-fubo-monza-vs-cagliari-9a3faa6ea1da": {
-    "url": "https://otte.cache.aiv-cdn.net/dub-nitro/live/clients/dash/enc/1wlv9dr4vx/out/v1/632322be5f1047acb2472f90f8857182/cenc.mpd",
-    "drm": {
-      "42f72c025dd53039244adc13b7e31dad": "a7bd941a19f6dd14f3004a623a6ad3a1"
-    }
-  },
-  "direct-bein-parma-vs-torino-60eb2370b1b2": {
-    "url": "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/q4u5nwaogz/out/v1/18de6d3e65934f3a8de4358e69eab86c/cenc.mpd",
-    "drm": {
-      "7995c724a13748ed970840a8ab5bb9b3": "67bdaf1e2175b9ff682fcdf0e2354b1e"
-    }
-  },
-  "direct-sport-1-cz-parma-vs-torino-613fe6adb4d6": {
-    "url": "https://dash2.antik.sk/stream/nvidia_sport_1/playlist_cenc.mpd",
-    "drm": {
-      "11223344556677889900112233445566": "4b80724d0ef86bcb2c21f7999d67739d"
-    }
-  },
-  "direct-dazn-italian-parma-vs-torino-462f4ed0995f": {
-    "url": "https://otte.cache.aiv-cdn.net/lhr-nitro/live/clients/dash/enc/jsclesugzm/out/v1/d34c1fbfd7bf4a3d838fadcc27f3e9d0/cenc.mpd",
-    "drm": {
-      "1ef586b93ef9bef98fec6240518426cc": "dd25f02f6694a016a015c96d1e6d9eb8"
-    }
-  },
-  "direct-premier-sports-getafe-vs-rayo-vallecano-7b437c61c2e0": {
-    "url": "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/m6sqanvm2m/out/v1/f6beb46c6e9a4132ad739f3ca27df6aa/cenc.mpd",
-    "drm": {
-      "1444f4235529f183f0a5a486befe9cdb": "e5e3fec67a1bb3472a2089c8a0a2557f"
-    }
-  },
-  "direct-bein-getafe-vs-rayo-vallecano-74fd4c3a8d9e": {
-    "url": "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/8m8cd46i1t/out/v1/83985c68e4174e90a58a1f2c024be4c9/cenc.mpd?",
-    "drm": {
-      "0b42be2664d7e811d04f3e504e0924c5": "ae24090123b8c72ac5404dc152847cb8"
-    }
-  },
-  "direct-dsports-getafe-vs-rayo-vallecano-5731f9d67909": {
-    "url": "https://otte.cache.aiv-cdn.net/iad-nitro/live/clients/dash/enc/z5oyxzsxdk/out/v1/7695a0f64a0e424b973d5b09a2a3eb91/cenc.mpd",
-    "drm": {
-      "f836853d8eac19446ed9535f5fc568b1": "b3bc5ef00602b29abac7e482d3d9fbf3"
-    }
-  },
-  "direct-fancode-getafe-vs-rayo-vallecano-5d5238b75f44": {
-    "url": "https://otte.cache.aiv-cdn.net/iad-nitro/live/clients/dash/enc/avqlywnuzx/out/v1/aefca6420f944a9482e117f315de535f/cenc.mpd",
-    "drm": {
-      "1994b1df7dfd2e8a8d7b9bf3fb900285": "22a1444b3da18e139191665b3d652835"
-    }
-  },
-  "direct-caze-tv-getafe-vs-rayo-vallecano-1d97cf178f37": {
-    "url": "https://otte.cache.aiv-cdn.net/bom-nitro/live/clients/dash/enc/3ynrpdanq2/out/v1/81fd4c26584044d2b1a1cc5b32fa9af0/cenc.mpd?",
-    "drm": {
-      "34475edab991ad5e92548aebd710410a": "501b209cccd323ac00bf5ac15b406cb4"
-    }
-  },
-  "direct-paramount-parma-vs-torino-2f9b49ff743a": {
-    "url": "https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/startover/clients/dash/manipulated-manifest-pdx-prod/enc/bjuobqqcik/out/v1/c232618725b84b8ab98c014b2c047b8e/1baee461-37fd-478e-ad8e-dc9628b03a90-cenc.mpd?aws_sessionId=f42b41ec-a922-42aa-bb7b-17abaf9aa2ec",
-    "drm": {
-      "f60d913fcb516e71da3926025746c39a": "bf308ff4098eb2518131d549e346026d"
-    }
-  },
-  "direct-fubo-parma-vs-torino-c811c5e66a5d": {
-    "url": "https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/startover/clients/dash/manipulated-manifest-iad-prod/enc/8ku8swxcow/out/v1/e9584c6de0d145a9ac1b36ddf7795081/bc6462b9-02f2-4c15-a421-45c00251b305-cenc.mpd?aws_sessionId=0b44bf40-59dd-4db0-a2a0-aacd0f0d33b8",
-    "drm": {
-      "e09a0900100e5ac77d4adb45a602a86b": "7da511a38053d3e150d38f47ac7d8298"
-    }
-  },
-  "direct-fubo-tottenham-hotspur-vs-coventry-city-6d5396b1e1ae": {
-    "url": "https://otte.live.fly.ww.aiv-cdn.net/pdx-nitro/startover/clients/dash/manipulated-manifest-iad-prod/enc/doo7mzvktm/out/v1/ee234bf8b2854366834b938725860805/80851ab1-2930-4f00-a864-15c08159794b-cenc.mpd?aws_sessionId=c5ca413e-a7c6-422a-afae-b17977560374",
-    "drm": {
-      "3f5adbfaa12a3096c3582c701629445e": "1e201be5fb21c2ff5cf33175c05dfaba"
+      "9bb758333d247d1aeb46e7de7603ebe8": "b6fcb2d1a2ffc7f25ff933c392e99285"
     }
   }
 }

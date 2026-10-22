@@ -1,342 +1,142 @@
 [
   {
-    "id": "463e8185-f280-464f-92fb-5722287",
-    "duration": 3,
-    "league": "Brasileiro",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
+    "id": "55c3e94c-127e-4e46-8e52-77a15af8a2b8",
+    "duration": 20,
+    "league": "French Open Badminton Championships",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Badminton.png",
     "team1": {
-      "name": "SC Corinthians SP",
-      "logo": "https://s.q5qo.com/data/a51ff6bcaa9033d24b57343771c3f1b7.png"
+      "name": "",
+      "logo": ""
     },
     "team2": {
-      "name": "EC Vitoria BA",
-      "logo": "https://s.q5qo.com/data/b2245bcf567fa75f11fb613301e81e4c.png"
+      "name": "Badminton",
+      "logo": "https://www.yonexifb.com/medias/articles/desktop-le-tirage-est-tombe-les-bleus-sont-fixes-picture-20261013123827.png"
     },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "06:00",
-    "match_date": "2026-10-20",
-    "match_time": "06:00",
-    "firstRow": 47,
-    "r": "rg88srLwxsIqR6j5fJ"
+    "kickoff_date": "2026-10-22",
+    "kickoff_time": "17:00",
+    "match_date": "2026-10-22",
+    "match_time": "17:00",
+    "firstRow": 3,
+    "r": "rhAhtnXefYvhcqfGQc"
   },
   {
-    "id": "6d95fe71-2fdb-4659-9407-5741645",
-    "duration": 3,
-    "league": "Colombian Second Division Football League",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
+    "id": "8bc13d8d-db14-4ecc-b9e9-d411dbc3c33e",
+    "duration": 4.25,
+    "league": "MotoGP: Red Bull Grand Prix of Australia",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Racing.png",
     "team1": {
-      "name": "Real Cartagena FC",
-      "logo": "https://s.q5qo.com/data/88983a621b0102d8da25b7b4efa4042d.png"
+      "name": "",
+      "logo": ""
     },
     "team2": {
-      "name": "Boyaca Patriotas",
-      "logo": "https://s.q5qo.com/data/484adf9a6eb1570a9f124b5ea29888c7.png"
+      "name": "Free Practice 1",
+      "logo": "https://images.fancode.com/skillup-uploads/cms-media/Grand-Prix-of-Australia-TV-BG.png?hash=eyJrZXkiOiJza2lsbHVwLXVwbG9hZHMvY21zLW1lZGlhL0dyYW5kLVByaXgtb2YtQXVzdHJhbGlhLVRWLUJHLnBuZyIsImVkaXRzIjp7InJlc2l6ZSI6eyJmaXQiOiJjb3ZlciIsIndpZHRoIjoxNjc4LCJoZWlnaHQiOjk0NH0sIndlYnAiOnsicXVhbGl0eSI6NjAsImxvc3NsZXNzIjpmYWxzZX19LCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIn0="
     },
-    "kickoff_date": "2026-10-20",
+    "kickoff_date": "2026-10-23",
+    "kickoff_time": "05:00",
+    "match_date": "2026-10-23",
+    "match_time": "04:45",
+    "firstRow": 46,
+    "r": "rqIQvOanMYCLXu9djU"
+  },
+  {
+    "id": "c934beb8-1004-4269-9499-5764641",
+    "duration": 3,
+    "league": "Brazilian Copa do Brasil Women",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
+    "team1": {
+      "name": "Fluminense FC RJ (W)",
+      "logo": "https://s.q5qo.com/data/56b04631aa0180a1fff286c7dda25d1.png"
+    },
+    "team2": {
+      "name": "CR Flamengo RJ (W)",
+      "logo": "https://s.q5qo.com/data/2de07b36104f09ab454b74a81f4dea4c.png"
+    },
+    "kickoff_date": "2026-10-23",
+    "kickoff_time": "05:00",
+    "match_date": "2026-10-23",
+    "match_time": "05:00",
+    "firstRow": 47,
+    "r": "r0xGATLcUs7XC7d3qC"
+  },
+  {
+    "id": "e88b6b56-c466-4cab-a792-5286949",
+    "duration": 3,
+    "league": "NBA",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Basketball.png",
+    "team1": {
+      "name": "Philadelphia 76ers",
+      "logo": "https://s.q5qo.com/data/d2814873bdb3cd0ffe71c7dd081831a1.png"
+    },
+    "team2": {
+      "name": "Cleveland Cavaliers",
+      "logo": "https://s.q5qo.com/data/4c2d46dfa18a7b5044be1ea89c116f70.png"
+    },
+    "kickoff_date": "2026-10-23",
     "kickoff_time": "06:00",
-    "match_date": "2026-10-20",
+    "match_date": "2026-10-23",
     "match_time": "06:00",
     "firstRow": 48,
-    "r": "rIVzej2cdR51EDbFu5"
+    "r": "ruyBXOFuAzgVcqYVVl"
   },
   {
-    "id": "3fada055-7c64-4dec-ad77-5741646",
+    "id": "75744454-9260-430c-a15a-5744493",
     "duration": 3,
-    "league": "Uruguay National Championship",
+    "league": "Caribbean Club Championship Cup",
     "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
     "team1": {
-      "name": "Club Nacional de Football",
-      "logo": "https://s.q5qo.com/data/7e16250dc775c6366f01b73fe87e59b4.png"
+      "name": "Mount Pleasant FA",
+      "logo": "https://s.q5qo.com/data/a7f9ebc28bc6ec0854bf68dd40943a8e.png"
     },
     "team2": {
-      "name": "Deportivo Maldonado",
-      "logo": "https://s.q5qo.com/data/e3515711be29e752b2de714fe4747937.png"
+      "name": "Club Sando",
+      "logo": "https://s.q5qo.com/data/cffa83b2fe3d08cc0e88f268ed6ceb82.png"
     },
-    "kickoff_date": "2026-10-20",
+    "kickoff_date": "2026-10-23",
     "kickoff_time": "06:00",
-    "match_date": "2026-10-20",
+    "match_date": "2026-10-23",
     "match_time": "06:00",
     "firstRow": 49,
-    "r": "r2vwz0cCcKe5tcatUK"
+    "r": "rqB3b5prpbgaFIhn81"
   },
   {
-    "id": "c668d916-dea9-4da9-8c05-5748607",
+    "id": "47afdec7-93fc-4d4e-ae14-5286950",
     "duration": 3,
-    "league": "Mexican National Women's Football Championship",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
+    "league": "NBA",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Basketball.png",
     "team1": {
-      "name": "Deportivo Toluca FC (W)",
-      "logo": "https://s.q5qo.com/data/958fa8487e1e16e3fbca885c3f9c3137.png"
+      "name": "Oklahoma City Thunder",
+      "logo": "https://s.q5qo.com/data/cad6fbf1291081679ee97b00912d614.png"
     },
     "team2": {
-      "name": "Club Santos Laguna (W)",
-      "logo": "https://s.q5qo.com/data/959200216a2a4403e8a67d4b19b59275.png"
+      "name": "Denver Nuggets",
+      "logo": "https://s.q5qo.com/data/9cc2a436baa3e4c3d22c17067dc8cea8.png"
     },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "07:00",
-    "match_date": "2026-10-20",
-    "match_time": "07:00",
+    "kickoff_date": "2026-10-23",
+    "kickoff_time": "08:30",
+    "match_date": "2026-10-23",
+    "match_time": "08:30",
     "firstRow": 50,
-    "r": "rKrGvZaxoBejoa7UNl"
+    "r": "r633cGXdyrJpJsZCYG"
   },
   {
-    "id": "f4ec092b-d81c-4e6c-878c-5729281",
-    "duration": 3,
-    "league": "WNBA Finals",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Basketball.png",
+    "id": "c1fae64d-2b1e-48f6-9d8a-d0d1b2a6d59d",
+    "duration": 10,
+    "league": "MotoGP: Red Bull Grand Prix of Australia",
+    "icon": "https://kltraid.pages.dev/images/sportsicon/Main_Racing.png",
     "team1": {
-      "name": "Golden State Valkyries (W)",
-      "logo": "https://s.q5qo.com/data/59bb3fad672d7e04dfd2415e8628cf2b.png"
+      "name": "",
+      "logo": ""
     },
     "team2": {
-      "name": "Atlanta Dream (W)",
-      "logo": "https://s.q5qo.com/data/9945a20132c5c6fc05bafe44af00ee34.png"
+      "name": "Practice",
+      "logo": "https://images.fancode.com/skillup-uploads/cms-media/Grand-Prix-of-Australia-TV-BG.png?hash=eyJrZXkiOiJza2lsbHVwLXVwbG9hZHMvY21zLW1lZGlhL0dyYW5kLVByaXgtb2YtQXVzdHJhbGlhLVRWLUJHLnBuZyIsImVkaXRzIjp7InJlc2l6ZSI6eyJmaXQiOiJjb3ZlciIsIndpZHRoIjoxNjc4LCJoZWlnaHQiOjk0NH0sIndlYnAiOnsicXVhbGl0eSI6NjAsImxvc3NsZXNzIjpmYWxzZX19LCJvdXRwdXRGb3JtYXQiOiJ3ZWJwIn0="
     },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "07:00",
-    "match_date": "2026-10-20",
-    "match_time": "07:00",
-    "firstRow": 51,
-    "r": "rvDEm4x97HQ8nAZa3E"
-  },
-  {
-    "id": "cbde9cf7-f72f-4bab-9731-5741636",
-    "duration": 3,
-    "league": "MLB",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Baseball.png",
-    "team1": {
-      "name": "Tampa Bay Rays",
-      "logo": "https://s.q5qo.com/data/a7deb14a3e9fe9e6bfc8b70c0a43fcd8.png"
-    },
-    "team2": {
-      "name": "Cleveland Guardians",
-      "logo": "https://s.q5qo.com/data/d741867c1fdf1d20736a55e8e64f4f43.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "07:00",
-    "match_date": "2026-10-20",
-    "match_time": "07:00",
-    "firstRow": 52,
-    "r": "rlLTJzrkxkRWSIVs0o"
-  },
-  {
-    "id": "96ccec85-0df0-4e17-89a3-5687193",
-    "duration": 3,
-    "league": "Argentine National Championship",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
-    "team1": {
-      "name": "Deportivo Riestra",
-      "logo": "https://s.q5qo.com/data/9e63dd8f76d60c15fbb7866273bb7dea.png"
-    },
-    "team2": {
-      "name": "Union de Santa Fe",
-      "logo": "https://s.q5qo.com/data/c741048b2b75b2e2f828e8f902e5115d.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "07:15",
-    "match_date": "2026-10-20",
-    "match_time": "07:15",
-    "firstRow": 53,
-    "r": "rEo3mr3q8MZIoWAZgo"
-  },
-  {
-    "id": "2d1ffadb-ff5f-496c-a0cc-5794394",
-    "duration": 3,
-    "league": "Argentine National Basketball Championship",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Basketball.png",
-    "team1": {
-      "name": "Independiente De Oliva",
-      "logo": "https://s.q5qo.com/data/9a53ba436f4924ac606c9f3291df0e11.png"
-    },
-    "team2": {
-      "name": "CA Lanus",
-      "logo": "https://s.q5qo.com/data/57fd708bc9593300c1531e0fe8d96c75.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "07:51",
-    "match_date": "2026-10-20",
-    "match_time": "07:51",
-    "firstRow": 54,
-    "r": "rztJiRvdK9JbDdLcYa"
-  },
-  {
-    "id": "cb0a5c9a-cc2c-4399-acad-5727586",
-    "duration": 3,
-    "league": "Uruguay Basketball Tournament",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Basketball.png",
-    "team1": {
-      "name": "Defensor Sporting",
-      "logo": "https://s.q5qo.com/data/437c6988da4b73625f81f53198c8c904.png"
-    },
-    "team2": {
-      "name": "Club Goes",
-      "logo": "https://s.q5qo.com/data/c1a180d1269d10adc687370d55a3f854.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "07:53",
-    "match_date": "2026-10-20",
-    "match_time": "07:53",
-    "firstRow": 55,
-    "r": "rwJe4rD0Ix82XJf3cT"
-  },
-  {
-    "id": "fc4353dc-4de0-449e-a762-5796744",
-    "duration": 3,
-    "league": "Puerto Rico Superior National Women's",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Basketball.png",
-    "team1": {
-      "name": "Gigantes De Carolina (W)",
-      "logo": "https://s.q5qo.com/data/899d3d9df9b849c8bde678760398fb3b.png"
-    },
-    "team2": {
-      "name": "Criollos de Caguas (W)",
-      "logo": "https://s.q5qo.com/data/6dad0a1e8348f657e9230c9153d4c48e.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "07:56",
-    "match_date": "2026-10-20",
-    "match_time": "07:56",
-    "firstRow": 56,
-    "r": "rWPJTVZPkCf0nQbAvr"
-  },
-  {
-    "id": "5eef98ae-3c8c-4cbd-8f19-5796754",
-    "duration": 3,
-    "league": "Puerto Rico Superior National Women's",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Basketball.png",
-    "team1": {
-      "name": "Pollitas de Isabela (W)",
-      "logo": "https://s.q5qo.com/data/e6333fd11c43f239d5b7655bf58ec16e.png"
-    },
-    "team2": {
-      "name": "Atenienses de Manati (W)",
-      "logo": "https://s.q5qo.com/data/78471df3515d5953d41f38e554a73372.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "07:56",
-    "match_date": "2026-10-20",
-    "match_time": "07:56",
-    "firstRow": 57,
-    "r": "r38oAefSc4m9kRdX9T"
-  },
-  {
-    "id": "4d357626-27c4-4507-a322-5790263",
-    "duration": 3,
-    "league": "Jamaica National Championship",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
-    "team1": {
-      "name": "Racing United FC",
-      "logo": "https://s.q5qo.com/data/7839b8e7af810d72ccd3e7134d65d4a9.png"
-    },
-    "team2": {
-      "name": "Waterhouse FC",
-      "logo": "https://s.q5qo.com/data/26fed224e20ed5ac46dd75f6fac4e4e1.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "08:00",
-    "match_date": "2026-10-20",
-    "match_time": "08:00",
-    "firstRow": 58,
-    "r": "rQ4oEMFJzN4ZxD760d"
-  },
-  {
-    "id": "2c8f289e-2c9b-405a-bf5e-5747891",
-    "duration": 3,
-    "league": "Colombian National Championship",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
-    "team1": {
-      "name": "AD Pasto",
-      "logo": "https://s.q5qo.com/data/8a477a87bde3cf91794daea4db05bc9a.png"
-    },
-    "team2": {
-      "name": "Alianza Valledupar FC",
-      "logo": "https://s.q5qo.com/data/e9cbeb809deafc6f4da4b139c2022370.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "08:05",
-    "match_date": "2026-10-20",
-    "match_time": "08:05",
-    "firstRow": 59,
-    "r": "rnP392tIv7IyAItjM0"
-  },
-  {
-    "id": "cee4e3e8-bbc6-4b21-bd0e-5748615",
-    "duration": 3,
-    "league": "Mexican National Women's Football Championship",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
-    "team1": {
-      "name": "Club Leon (W)",
-      "logo": "https://s.q5qo.com/data/42097b6f452525a1122d1bc1f7809e46.png"
-    },
-    "team2": {
-      "name": "Atlante FC (w)",
-      "logo": "https://s.q5qo.com/data/a983ee8262e7861fa24a37f1e143459.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "08:06",
-    "match_date": "2026-10-20",
-    "match_time": "08:06",
-    "firstRow": 60,
-    "r": "rldYdrYLNttukHgjQ6"
-  },
-  {
-    "id": "75975bae-93ab-41eb-8211-5748616",
-    "duration": 3,
-    "league": "Costa Rica Championship",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Soccer.png",
-    "team1": {
-      "name": "CD Escorpiones Belen",
-      "logo": "https://s.q5qo.com/data/1d3b6e75940e924b2c168fd23c0de1b9.png"
-    },
-    "team2": {
-      "name": "Puntarenas FC",
-      "logo": "https://s.q5qo.com/data/995465a4c979a11850c47d04dcf0c7bd.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "09:00",
-    "match_date": "2026-10-20",
-    "match_time": "09:00",
-    "firstRow": 61,
-    "r": "rCAUmnyVIRDXlktuCM"
-  },
-  {
-    "id": "82a56b81-235b-4549-ace8-5773452",
-    "duration": 3,
-    "league": "LNBP Mexican Basketball Tournament",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Basketball.png",
-    "team1": {
-      "name": "Astros de Jalisco",
-      "logo": "https://s.q5qo.com/data/e765fbe0e5fea9a757f11c61c61bcf4d.png"
-    },
-    "team2": {
-      "name": "Mineros de Zacatecas",
-      "logo": "https://s.q5qo.com/data/6d4c4a34e14dd2e21855d64a973e3bf0.png"
-    },
-    "kickoff_date": "2026-10-20",
+    "kickoff_date": "2026-10-23",
     "kickoff_time": "09:15",
-    "match_date": "2026-10-20",
-    "match_time": "09:15",
-    "firstRow": 62,
-    "r": "r2WNUE2Zo0N5U2qOib"
-  },
-  {
-    "id": "d6bfa2e2-2304-46cd-a984-5773449",
-    "duration": 3,
-    "league": "LNBP Mexican Basketball Tournament",
-    "icon": "https://kltraid.pages.dev/images/sportsicon/Basketball.png",
-    "team1": {
-      "name": "Panteras de Aguascalientes",
-      "logo": "https://s.q5qo.com/data/a4eb51d6e6a2ee5b1fe23fc135273d49.png"
-    },
-    "team2": {
-      "name": "Lobos Plateados",
-      "logo": "https://s.q5qo.com/data/b8d70be92b8a74c903e774ce4047530d.png"
-    },
-    "kickoff_date": "2026-10-20",
-    "kickoff_time": "09:30",
-    "match_date": "2026-10-20",
-    "match_time": "09:30",
-    "firstRow": 63,
-    "r": "r8MeTmOQ2wihVFTR11"
+    "match_date": "2026-10-23",
+    "match_time": "09:00",
+    "firstRow": 51,
+    "r": "r52d2SIFuIXSOYuwNR"
   }
 ]

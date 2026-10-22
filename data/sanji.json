@@ -1,189 +1,182 @@
 [
   {
     "id": "Channel1",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=BEIN%201%20AU",
+    "url": "https://live.kltratv.site/playerhd?channel=BEIN%201%20AU",
     "logo": "https://www.visionplus.id/images/repository/771/198771-LOGO-l.png",
     "name": "BEIN 1 AU",
     "status": "Online"
   },
   {
     "id": "Channel2",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=BEIN%202%20AU",
+    "url": "https://live.kltratv.site/playerhd?channel=BEIN%202%20AU",
     "logo": "https://www.visionplus.id/images/repository/771/198771-LOGO-l.png",
     "name": "BEIN 2 AU",
     "status": "Online"
   },
   {
     "id": "Channel3",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=BEIN%203%20AU",
+    "url": "https://live.kltratv.site/playerhd?channel=BEIN%203%20AU",
     "logo": "https://www.visionplus.id/images/repository/771/198771-LOGO-l.png",
     "name": "BEIN 3 AU",
     "status": "Online"
   },
   {
     "id": "Channel4",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=MCOT%20HD%2030",
+    "url": "https://live.kltratv.site/playerhd?channel=MCOT%20HD%2030",
     "logo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/77/MCOT_Ch9_Logo.png/330px-MCOT_Ch9_Logo.png",
     "name": "MCOT HD 30",
     "status": "Online"
   },
   {
     "id": "Channel5",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=MONOMAX",
+    "url": "https://live.kltratv.site/playerhd?channel=MONOMAX",
     "logo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/MONOMAX_Sports_2026.svg/250px-MONOMAX_Sports_2026.svg.png",
     "name": "MONOMAX",
     "status": "Online"
   },
   {
     "id": "Channel6",
-    "url": "https://kltra-stream.elutuna.workers.dev/playerhd?channel=ONE%20CHAMPIONSHIP",
-    "logo": "https://thumb.wikimedia.org/wikipedia/en/thumb/b/b0/ONE_Championship_company_logo.png/250px-ONE_Championship_company_logo.png?utm_source=en.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
-    "name": "ONE CHAMPIONSHIP",
-    "status": "Online"
-  },
-  {
-    "id": "Channel7",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=ONE%20HD%2031",
+    "url": "https://live.kltratv.site/playerhd?channel=ONE%20HD%2031",
     "logo": "https://upload.wikimedia.org/wikipedia/en/a/a8/One_31_Logo.png",
     "name": "ONE HD 31",
     "status": "Online"
   },
   {
-    "id": "Channel8",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=PREMIER%20SPORT%201",
+    "id": "Channel7",
+    "url": "https://live.kltratv.site/playerhd?channel=PREMIER%20SPORT%201",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/PS_Logo_STACKED_4.png/250px-PS_Logo_STACKED_4.png",
     "name": "PREMIER SPORT 1",
     "status": "Online"
   },
   {
-    "id": "Channel9",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=PREMIER%20SPORT%202",
+    "id": "Channel8",
+    "url": "https://live.kltratv.site/playerhd?channel=PREMIER%20SPORT%202",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/PS_Logo_STACKED_4.png/250px-PS_Logo_STACKED_4.png",
     "name": "PREMIER SPORT 2",
     "status": "Online"
   },
   {
-    "id": "Channel10",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=SPOTV%201%20PH",
+    "id": "Channel9",
+    "url": "https://live.kltratv.site/playerhd?channel=SPOTV%201%20PH",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/SPOTV_logo.svg/250px-SPOTV_logo.svg.png",
     "name": "SPOTV 1 PH",
     "status": "Online"
   },
   {
-    "id": "Channel11",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=SPOTV%202%20PH",
+    "id": "Channel10",
+    "url": "https://live.kltratv.site/playerhd?channel=SPOTV%202%20PH",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/SPOTV_logo.svg/250px-SPOTV_logo.svg.png",
     "name": "SPOTV 2 PH",
     "status": "Online"
   },
   {
-    "id": "Channel12",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=SUPER%20TENNIS%201",
+    "id": "Channel11",
+    "url": "https://live.kltratv.site/playerhd?channel=SUPER%20TENNIS%201",
     "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiwRpU2lA3rPmjE00nWYyKYiUsc6yf3cJRa_yYvl_LuIzVyXlhR1UIR5ew&s=10",
     "name": "SUPER TENNIS 1",
     "status": "Online"
   },
   {
-    "id": "Channel13",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=SUPER%20TENNIS%202",
+    "id": "Channel12",
+    "url": "https://live.kltratv.site/playerhd?channel=SUPER%20TENNIS%202",
     "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiwRpU2lA3rPmjE00nWYyKYiUsc6yf3cJRa_yYvl_LuIzVyXlhR1UIR5ew&s=10",
     "name": "SUPER TENNIS 2",
     "status": "Online"
   },
   {
-    "id": "Channel14",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=SUPER%20TENNIS%203",
+    "id": "Channel13",
+    "url": "https://live.kltratv.site/playerhd?channel=SUPER%20TENNIS%203",
     "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiwRpU2lA3rPmjE00nWYyKYiUsc6yf3cJRa_yYvl_LuIzVyXlhR1UIR5ew&s=10",
     "name": "SUPER TENNIS 3",
     "status": "Online"
   },
   {
-    "id": "Channel15",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=SUPER%20TENNIS%204",
+    "id": "Channel14",
+    "url": "https://live.kltratv.site/playerhd?channel=SUPER%20TENNIS%204",
     "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiwRpU2lA3rPmjE00nWYyKYiUsc6yf3cJRa_yYvl_LuIzVyXlhR1UIR5ew&s=10",
     "name": "SUPER TENNIS 4",
     "status": "Online"
   },
   {
-    "id": "Channel16",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=SUPER%20TENNIS%205",
+    "id": "Channel15",
+    "url": "https://live.kltratv.site/playerhd?channel=SUPER%20TENNIS%205",
     "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSiwRpU2lA3rPmjE00nWYyKYiUsc6yf3cJRa_yYvl_LuIzVyXlhR1UIR5ew&s=10",
     "name": "SUPER TENNIS 5",
     "status": "Online"
   },
   {
-    "id": "Channel17",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=T%20SPORTS%207",
+    "id": "Channel16",
+    "url": "https://live.kltratv.site/playerhd?channel=T%20SPORTS%207",
     "logo": "https://assets.teleon.tv/180_webp/t-sports-7-th.webp",
     "name": "T SPORTS 7",
     "status": "Online"
   },
   {
-    "id": "Channel18",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=THAIRATH%20TV%2032%20HD",
+    "id": "Channel17",
+    "url": "https://live.kltratv.site/playerhd?channel=THAIRATH%20TV%2032%20HD",
     "logo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/Thairath_TV32.svg/250px-Thairath_TV32.svg.png",
     "name": "THAIRATH TV 32 HD",
     "status": "Online"
   },
   {
-    "id": "Channel19",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=TNT%201",
+    "id": "Channel18",
+    "url": "https://live.kltratv.site/playerhd?channel=TNT%201",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/TNT_Sports_%282023%29.svg/960px-TNT_Sports_%282023%29.svg.png",
     "name": "TNT 1",
     "status": "Online"
   },
   {
-    "id": "Channel20",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=TNT%202",
+    "id": "Channel19",
+    "url": "https://live.kltratv.site/playerhd?channel=TNT%202",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/TNT_Sports_%282023%29.svg/960px-TNT_Sports_%282023%29.svg.png",
     "name": "TNT 2",
     "status": "Online"
   },
   {
-    "id": "Channel21",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=TNT%203",
+    "id": "Channel20",
+    "url": "https://live.kltratv.site/playerhd?channel=TNT%203",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/TNT_Sports_%282023%29.svg/960px-TNT_Sports_%282023%29.svg.png",
     "name": "TNT 3",
     "status": "Online"
   },
   {
-    "id": "Channel22",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=TNT%204",
+    "id": "Channel21",
+    "url": "https://live.kltratv.site/playerhd?channel=TNT%204",
     "logo": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/TNT_Sports_%282023%29.svg/960px-TNT_Sports_%282023%29.svg.png",
     "name": "TNT 4",
     "status": "Online"
   },
   {
-    "id": "Channel23",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=TSN%201%20CA",
+    "id": "Channel22",
+    "url": "https://live.kltratv.site/playerhd?channel=TSN%201%20CA",
     "logo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/TSN_Logo.svg/250px-TSN_Logo.svg.png?utm_source=id.wikipedia.org&utm_campaign=index&utm_content=thumbnail",
     "name": "TSN 1",
     "status": "Online"
   },
   {
-    "id": "Channel24",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=TSN%202%20CA",
+    "id": "Channel23",
+    "url": "https://live.kltratv.site/playerhd?channel=TSN%202%20CA",
     "logo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/TSN_Logo.svg/250px-TSN_Logo.svg.png?utm_source=id.wikipedia.org&utm_campaign=index&utm_content=thumbnail",
     "name": "TSN 2",
     "status": "Online"
   },
   {
-    "id": "Channel25",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=TSN%203%20CA",
+    "id": "Channel24",
+    "url": "https://live.kltratv.site/playerhd?channel=TSN%203%20CA",
     "logo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/TSN_Logo.svg/250px-TSN_Logo.svg.png?utm_source=id.wikipedia.org&utm_campaign=index&utm_content=thumbnail",
     "name": "TSN 3",
     "status": "Online"
   },
   {
-    "id": "Channel26",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=TSN%204%20CA",
+    "id": "Channel25",
+    "url": "https://live.kltratv.site/playerhd?channel=TSN%204%20CA",
     "logo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/TSN_Logo.svg/250px-TSN_Logo.svg.png?utm_source=id.wikipedia.org&utm_campaign=index&utm_content=thumbnail",
     "name": "TSN 4",
     "status": "Online"
   },
   {
-    "id": "Channel27",
-    "url": "https://playerkltra.pages.dev/playerhd?channel=TSN%205%20CA",
+    "id": "Channel26",
+    "url": "https://live.kltratv.site/playerhd?channel=TSN%205%20CA",
     "logo": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/TSN_Logo.svg/250px-TSN_Logo.svg.png?utm_source=id.wikipedia.org&utm_campaign=index&utm_content=thumbnail",
     "name": "TSN 5",
     "status": "Online"

@@ -166,7 +166,7 @@
     }
 
     // =========================================================
-    // 2. Data Decryption & API Fetching
+    // 2. Data Decryption & Local/Remote API Fetching
     // =========================================================
     function decryptPayload(payload, key) {
         const str = String(payload || '').trim();
@@ -188,27 +188,68 @@
         }
     }
 
-    async function fetchJSON(url, fallbackLocal, key) {
+    async function loadJsonFile(primaryLocal, fallbackLocal, remoteEndpoint, key) {
+        // 1. Try primary local file first (fastest, saved data)
         try {
-            const res = await fetch(url);
+            const res = await fetch(primaryLocal + '?v=' + Date.now());
             if (res.ok) {
                 const text = await res.text();
-                const decrypted = decryptPayload(text, key);
-                if (decrypted) return decrypted;
+                const data = decryptPayload(text, key);
+                if (data) return data;
             }
         } catch (e) {
-            console.warn(`Fetch ${url} failed, using local fallback ${fallbackLocal}`, e);
+            console.warn(`Primary local fetch ${primaryLocal} failed:`, e);
         }
 
-        try {
-            const localRes = await fetch(fallbackLocal);
-            if (localRes.ok) {
-                return await localRes.json();
+        // 2. Try fallback local file
+        if (fallbackLocal) {
+            try {
+                const res = await fetch(fallbackLocal + '?v=' + Date.now());
+                if (res.ok) {
+                    const text = await res.text();
+                    const data = decryptPayload(text, key);
+                    if (data) return data;
+                }
+            } catch (e) {
+                console.warn(`Fallback local fetch ${fallbackLocal} failed:`, e);
             }
-        } catch (e) {
-            console.error(`Local fallback ${fallbackLocal} failed:`, e);
         }
+
+        // 3. Fallback to remote endpoint if local is missing
+        if (remoteEndpoint) {
+            const cfg = window.KLTRA_CONFIG || {};
+            const origin = cfg.API_ORIGIN || 'https://kltratv-web.pages.dev';
+            try {
+                const res = await fetch(`${origin}${remoteEndpoint}?v=${Date.now()}`);
+                if (res.ok) {
+                    const text = await res.text();
+                    const decrypted = decryptPayload(text, key);
+                    if (decrypted) return decrypted;
+                }
+            } catch (e) {
+                console.warn(`Remote fetch ${remoteEndpoint} failed:`, e);
+            }
+        }
+
         return null;
+    }
+
+    function formatServerUrl(srvUrl, fallbackChannel, matchTitle) {
+        const titleParam = matchTitle ? `&name=${encodeURIComponent(matchTitle)}` : '';
+        if (!srvUrl) {
+            return `player.html?channel=${encodeURIComponent(fallbackChannel || 'BEIN 1 AU')}${titleParam}`;
+        }
+        // If srvUrl contains channel query parameter (e.g. kltratv playerhd/playernba)
+        const channelMatch = srvUrl.match(/channel=([^&]+)/);
+        if (channelMatch) {
+            return `player.html?channel=${channelMatch[1]}${titleParam}`;
+        }
+        // If srvUrl already points to player.html
+        if (srvUrl.startsWith('player.html')) {
+            return srvUrl;
+        }
+        // For direct stream URLs (m3u8, mpd, or iframe embed like online878)
+        return `player.html?url=${encodeURIComponent(srvUrl)}${titleParam}`;
     }
 
     // =========================================================
@@ -216,22 +257,21 @@
     // =========================================================
     async function loadData() {
         const cfg = window.KLTRA_CONFIG || {};
-        const origin = cfg.API_ORIGIN || 'https://kltratv-web.pages.dev';
         const key = cfg.FEED_MATERIAL_V2 || '';
 
-        // Fetch concurrently
-        const [luffyData, zoroData, sanjiData] = await Promise.all([
-            fetchJSON(`${origin}/bro/luffy.json`, './data/luffy.json', key),
-            fetchJSON(`${origin}/bro/zoro.json`, './data/zoro.json', key),
-            fetchJSON(`${origin}/bro/sanji.json`, './data/sanji.json', key)
+        // Fetch our saved data first, with remote fallbacks
+        const [eventsData, serversData, channelsData] = await Promise.all([
+            loadJsonFile('./data/events.json', './data/luffy.json', '/bro/f-82c6a419.json', key),
+            loadJsonFile('./data/servers.json', './data/zoro.json', '/bro/f-b4d9037e.json', key),
+            loadJsonFile('./data/channels.json', './data/sanji.json', '/bro/f-1e7a5c92.json', key)
         ]);
 
-        if (sanjiData && Array.isArray(sanjiData)) {
-            channelCatalog = sanjiData;
+        if (channelsData && Array.isArray(channelsData)) {
+            channelCatalog = channelsData;
         }
 
-        if (zoroData && Array.isArray(zoroData)) {
-            zoroData.forEach(item => {
+        if (serversData && Array.isArray(serversData)) {
+            serversData.forEach(item => {
                 if (item.r && Array.isArray(item.servers)) {
                     serverCatalog[item.r] = item.servers;
                 }
@@ -241,12 +281,14 @@
         // Build unified matches
         allMatches = [];
 
-        // 1. Add real API matches from luffyData
-        if (luffyData && Array.isArray(luffyData)) {
-            luffyData.forEach((item, idx) => {
+        // 1. Add real matches from saved data
+        if (eventsData && Array.isArray(eventsData)) {
+            const todayStr = getLocalDateString(new Date());
+
+            eventsData.forEach((item, idx) => {
                 const servers = serverCatalog[item.r] || [];
 
-                // Format time e.g. Pukul 19.45 or Jam 21.00
+                // Format time e.g. Pukul 06.00
                 const rawTime = item.match_time || item.kickoff_time || '20:00';
                 const timeParts = rawTime.split(':');
                 const hour = timeParts[0] || '20';
@@ -260,7 +302,9 @@
                 const t1 = String(item.team1?.name || '').toLowerCase();
                 const t2 = String(item.team2?.name || '').toLowerCase();
 
-                if (iconStr.includes('badminton') || leagueStr.includes('badminton') || t1.includes('badminton') || t2.includes('badminton')) {
+                if (leagueStr.includes('motogp') || leagueStr.includes('racing') || iconStr.includes('racing')) {
+                    sport = 'Racing';
+                } else if (iconStr.includes('badminton') || leagueStr.includes('badminton') || t1.includes('badminton') || t2.includes('badminton')) {
                     sport = 'Badminton';
                 } else if (iconStr.includes('baseball') || leagueStr.includes('baseball') || leagueStr.includes('kbo')) {
                     sport = 'Baseball';
@@ -270,18 +314,19 @@
                     sport = 'Tennis';
                 }
 
-                // Clean team names
+                // Clean team names & match titles
                 let team1Name = (item.team1?.name || '').trim();
                 let team2Name = (item.team2?.name || '').trim();
 
-                if (!team1Name && team2Name.toLowerCase().includes('badminton')) {
-                    team1Name = 'French Open (Court 1 - 4)';
-                    team2Name = 'Live Match Stream';
-                } else if (!team1Name) {
-                    team1Name = 'Babak Penyisihan';
-                }
-                if (!team2Name) {
-                    team2Name = 'Babak Utama';
+                if (sport === 'Racing') {
+                    if (!team1Name) team1Name = 'MotoGP Australia GP';
+                    if (!team2Name) team2Name = item.league || 'Practice / Race';
+                } else if (sport === 'Badminton') {
+                    if (!team1Name) team1Name = 'French Open Badminton';
+                    if (!team2Name || team2Name.toLowerCase() === 'badminton') team2Name = 'Court 1 - 4 HD';
+                } else {
+                    if (!team1Name) team1Name = 'Babak Penyisihan';
+                    if (!team2Name) team2Name = 'Babak Utama';
                 }
 
                 // Logos
@@ -289,17 +334,28 @@
                     ? `images/sportsicon/${sport}.png`
                     : 'images/sportsicon/Soccer.png';
 
-                const team1Logo = item.team1?.logo || defaultLogo;
-                const team2Logo = item.team2?.logo || defaultLogo;
+                const team1Logo = item.team1?.logo || item.team2?.logo || defaultLogo;
+                const team2Logo = item.team2?.logo || team1Logo || defaultLogo;
 
-                // Tab distribution: live/ongoing in today, upcoming in tomorrow, past in yesterday
+                // Date comparison for tabs:
+                const matchDate = item.match_date || item.kickoff_date || todayStr;
                 let tabCat = 'today';
-                if (idx >= 12) {
+                if (matchDate < todayStr) {
                     tabCat = 'yesterday';
-                } else if (idx >= 7) {
+                } else if (matchDate > todayStr) {
                     tabCat = 'tomorrow';
                 } else {
                     tabCat = 'today';
+                }
+
+                // Status:
+                let status = 'live';
+                if (tabCat === 'yesterday') {
+                    status = 'ended';
+                } else if (tabCat === 'tomorrow') {
+                    status = 'upcoming';
+                } else {
+                    status = (servers.length > 0) ? 'live' : 'upcoming';
                 }
 
                 const leagueLabel = item.league || `${sport} Tournament`;
@@ -309,7 +365,7 @@
                     id: item.id || `api-${idx}`,
                     league: leagueLabel,
                     sport: sport,
-                    isHot: idx < 5,
+                    isHot: idx < 5 || status === 'live',
                     team1: {
                         name: team1Name,
                         logo: team1Logo
@@ -322,14 +378,23 @@
                     commentator: `${sport} Official Broadcast`,
                     channelName: channelLabel,
                     servers: servers,
-                    status: (idx < 6) ? 'live' : 'upcoming',
+                    status: status,
                     tabCategory: tabCat
                 });
             });
         }
 
         // 2. Add real 24/7 Live Sports TV Channels
-        FEATURED_SPORTS_CHANNELS.forEach(tv => allMatches.push(tv));
+        FEATURED_SPORTS_CHANNELS.forEach(tv => {
+            allMatches.push(tv);
+            // Also make available in tomorrow tab as continuous 24/7 channel
+            allMatches.push({
+                ...tv,
+                id: `${tv.id}-tmrw`,
+                timeStr: 'Besok (Live 24 Jam)',
+                tabCategory: 'tomorrow'
+            });
+        });
 
         renderMatches();
     }
@@ -454,17 +519,18 @@
     // =========================================================
     function playMatch(match, targetUrl = null) {
         currentPlayingMatch = match;
+        const matchTitle = `${match.team1.name} vs ${match.team2.name}`;
 
         // Resolve direct stream URL to our internal engine
         let streamUrl = targetUrl;
         if (!streamUrl) {
-            // 1. Direct servers from zoro.json (TOP PRIORITY for real matches)
+            // 1. Direct servers from zoro/servers.json (TOP PRIORITY for real matches)
             if (match.servers && match.servers.length > 0) {
                 const s = match.servers[0];
                 if (s.url) {
-                    streamUrl = `player.html?url=${encodeURIComponent(s.url)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                    streamUrl = formatServerUrl(s.url, match.channelName, matchTitle);
                 } else if (s.key) {
-                    streamUrl = `player.html?key=${encodeURIComponent(s.key)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                    streamUrl = `player.html?key=${encodeURIComponent(s.key)}&name=${encodeURIComponent(matchTitle)}`;
                 }
             } 
             // 2. Direct player.html URL (e.g. for TV channels)
@@ -473,11 +539,11 @@
             } 
             // 3. Channel Name lookup (e.g. BEIN 1 AU, SPOTV 1 PH)
             else if (match.channelName) {
-                streamUrl = `player.html?channel=${encodeURIComponent(match.channelName)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                streamUrl = formatServerUrl(null, match.channelName, matchTitle);
             } 
             // 4. Fallback default
             else {
-                streamUrl = `player.html?channel=BEIN%201%20AU&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                streamUrl = `player.html?channel=BEIN%201%20AU&name=${encodeURIComponent(matchTitle)}`;
             }
         }
 
@@ -509,11 +575,11 @@
                 availableServers = match.servers.map((srv, idx) => {
                     let sUrl = '';
                     if (srv.url) {
-                        sUrl = `player.html?url=${encodeURIComponent(srv.url)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                        sUrl = formatServerUrl(srv.url, defaultChan, matchTitle);
                     } else if (srv.key) {
-                        sUrl = `player.html?key=${encodeURIComponent(srv.key)}&name=${encodeURIComponent(match.team1.name + ' vs ' + match.team2.name)}`;
+                        sUrl = `player.html?key=${encodeURIComponent(srv.key)}&name=${encodeURIComponent(matchTitle)}`;
                     } else {
-                        sUrl = `player.html?channel=${encodeURIComponent(defaultChan)}`;
+                        sUrl = formatServerUrl(null, defaultChan, matchTitle);
                     }
                     return { label: srv.label || `Server ${idx + 1}`, url: sUrl };
                 });
@@ -548,6 +614,7 @@
                     playMatch(match, url);
                 });
             });
+        }
         }
 
         // Highlight card
