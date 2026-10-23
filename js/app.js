@@ -615,7 +615,6 @@
                 });
             });
         }
-        }
 
         // Highlight card
         document.querySelectorAll('.match-card').forEach(c => {
