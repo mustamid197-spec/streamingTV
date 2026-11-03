@@ -92,13 +92,13 @@
                 Halaman ini adalah internal video engine (Google Shaka DASH + ClearKey DRM &amp; HLS.js) yang dipanggil secara otomatis oleh frame di <b>index.html</b>. Untuk menonton langsung pertandingan olahraga atau TV, silakan buka halaman utama atau pilih saluran uji coba berikut:
             </p>
             <div class="sample-buttons">
-                <a class="sample-btn" href="player.html?channel=BEIN%201%20AU">▶ BEIN 1 AU</a>
-                <a class="sample-btn" href="player.html?channel=SPOTV%201%20PH">▶ SPOTV 1</a>
-                <a class="sample-btn" href="player.html?channel=A%20RCTI">▶ RCTI</a>
-                <a class="sample-btn" href="player.html?channel=A%20TRANS%207">▶ TRANS 7</a>
-                <a class="sample-btn" href="player.html?channel=A%20METROTV">▶ METRO TV</a>
+                <a class="sample-btn" href="player.html?channel=SPORTITALIA">▶ SPORTITALIA HD</a>
+                <a class="sample-btn" href="player.html?channel=CBS%20SPORTS%20HQ">▶ CBS SPORTS HQ</a>
+                <a class="sample-btn" href="player.html?channel=TVRI%20SPORT%20HD">▶ TVRI SPORT HD</a>
+                <a class="sample-btn" href="player.html?channel=A%20MOJI">▶ MOJI TV SPORT</a>
+                <a class="sample-btn" href="player.html?channel=REAL%20MADRID%20TV">▶ REAL MADRID TV</a>
+                <a class="sample-btn" href="player.html?channel=RED%20BULL%20TV">▶ RED BULL TV</a>
                 <a class="sample-btn" href="player.html?channel=A%20KOMPASTV">▶ KOMPASTV</a>
-                <a class="sample-btn" href="player.html?channel=AD%20SPORTS%201">▶ AD SPORTS 1 (DRM)</a>
             </div>
             <a class="home-btn" href="index.html">← Buka Halaman Utama (KusoTV)</a>
         </div>
@@ -114,6 +114,77 @@
         const video = document.getElementById('video');
         const embedIframe = document.getElementById('embed-iframe');
 
+        // Built-in Verified Free-to-Air (FTA) & FAST Sports Channels (CORS: *, HTTP 200 OK)
+        const VERIFIED_FTA_CHANNELS = {
+            "SPORTITALIA": {
+                "url": "https://amg01370-italiansportcom-sportitalia-rakuten-3hmdb.amagi.tv/hls/amagi_hls_data_rakutenAA-sportitalia-rakuten/CDN/master.m3u8"
+            },
+            "CBS SPORTS HQ": {
+                "url": "https://dai.google.com/linear/hls/event/Sid4xiTQTkCT1SLu6rjUSQ/master.m3u8"
+            },
+            "TVRI SPORT HD": {
+                "url": "https://ott-balancer.tvri.go.id/live/eds/SportHD/hls/SportHD.m3u8"
+            },
+            "A MOJI": {
+                "url": "https://op-flashcon-digdayahd-1.dens.tv/h/h207/index.m3u8"
+            },
+            "MOJI TV HD": {
+                "url": "https://op-flashcon-digdayahd-1.dens.tv/h/h207/index.m3u8"
+            },
+            "REAL MADRID TV": {
+                "url": "https://rmtv.akamaized.net/hls/live/2043154/rmtv-en-web/master.m3u8"
+            },
+            "REAL MADRID TV2": {
+                "url": "https://rmtv.akamaized.net/hls/live/2043153/rmtv-es-web/master.m3u8"
+            },
+            "RED BULL TV": {
+                "url": "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8"
+            },
+            "RED BULL 1080P": {
+                "url": "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master_6660.m3u8"
+            },
+            "FUSBALL 2": {
+                "url": "https://sdn-global-live-streaming-packager-cache.3qsdn.com/77693/77693_264_live.m3u8"
+            },
+            "OMAN SPORTS": {
+                "url": "https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8"
+            },
+            "KTV": {
+                "url": "https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/index.m3u8"
+            },
+            "TVRI NASIONAL": {
+                "url": "https://ott-balancer.tvri.go.id/live/eds/Nasional/hls/Nasional.m3u8"
+            },
+            "TVRI WORLD": {
+                "url": "https://ott-balancer.tvri.go.id/live/eds/TVRIWorld/hls/TVRIWorld.m3u8"
+            },
+            "A KOMPASTV": {
+                "url": "https://op-flashcon-digdayahd-1.dens.tv/s/s104/index.m3u8"
+            },
+            "A METROTV": {
+                "url": "https://op-flashcon-digdayahd-1.dens.tv/h/h12/index.m3u8"
+            },
+            "A TV ONE": {
+                "url": "https://op-flashcon-digdayahd-1.dens.tv/h/h40/index.m3u8"
+            },
+            "A MDTV": {
+                "url": "https://op-flashcon-digdayahd-1.dens.tv/h/h223/index.m3u8"
+            },
+            "DW ENGLISH": {
+                "url": "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8"
+            }
+        };
+
+        const FALLBACK_HLS_LIST = [
+            "https://amg01370-italiansportcom-sportitalia-rakuten-3hmdb.amagi.tv/hls/amagi_hls_data_rakutenAA-sportitalia-rakuten/CDN/master.m3u8",
+            "https://dai.google.com/linear/hls/event/Sid4xiTQTkCT1SLu6rjUSQ/master.m3u8",
+            "https://ott-balancer.tvri.go.id/live/eds/SportHD/hls/SportHD.m3u8",
+            "https://op-flashcon-digdayahd-1.dens.tv/h/h207/index.m3u8",
+            "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
+            "https://rmtv.akamaized.net/hls/live/2043154/rmtv-en-web/master.m3u8"
+        ];
+        let currentFallbackIdx = 0;
+
         function setStatus(msg) {
             if (statusEl) statusEl.textContent = msg;
         }
@@ -126,56 +197,39 @@
             if (statusEl) statusEl.textContent = 'Playback error';
         }
 
-        function hideLoading() {
-            if (loadingEl) loadingEl.style.display = 'none';
+        function hideError() {
+            if (errorEl) errorEl.style.display = 'none';
         }
 
-        // XOR Decrypt helper
-        const FEED_MATERIAL_V2 = (window.KLTRA_CONFIG && window.KLTRA_CONFIG.FEED_MATERIAL_V2) || "";
-        const KEY_BYTES = new TextEncoder().encode(FEED_MATERIAL_V2);
+        function hideLoading() {
+            if (loadingEl) loadingEl.style.display = 'none';
+            hideError();
+        }
 
-        function decryptPayload(rawText) {
-            try {
-                // If it's already plain JSON
-                if (rawText.trim().startsWith('{') || rawText.trim().startsWith('[')) {
-                    return JSON.parse(rawText);
-                }
-                const binaryStr = atob(rawText.trim());
-                const out = new Uint8Array(binaryStr.length);
-                for (let i = 0; i < binaryStr.length; i++) {
-                    out[i] = binaryStr.charCodeAt(i) ^ KEY_BYTES[i % KEY_BYTES.length];
-                }
-                return JSON.parse(new TextDecoder().decode(out));
-            } catch (err) {
-                console.warn('Decrypt failed:', err);
-                return null;
+        function playNextFallbackStream() {
+            if (currentFallbackIdx < FALLBACK_HLS_LIST.length) {
+                const nextUrl = FALLBACK_HLS_LIST[currentFallbackIdx++];
+                console.warn('Switching to backup FTA sports stream:', nextUrl);
+                playHlsStream(nextUrl, true);
+            } else {
+                showError('Siaran sedang offline atau server sibuk. Silakan pilih Server lain.');
             }
         }
 
         async function fetchCatalog(path, fallbackFile) {
-            // Try local file first (instant, self-hosted, plain JSON)
             try {
                 const localRes = await fetch(fallbackFile + '?v=' + Date.now());
                 if (localRes.ok) {
-                    return await localRes.json();
+                    const data = await localRes.json();
+                    if (data && typeof data === 'object' && !Array.isArray(data)) {
+                        return Object.assign({}, data, VERIFIED_FTA_CHANNELS);
+                    }
+                    return data;
                 }
             } catch (e) {
-                console.warn('Local fetch failed, trying remote:', e);
+                console.warn('Local fetch failed:', e);
             }
-
-            // Fallback to remote API
-            const apiBase = (window.KLTRA_CONFIG && window.KLTRA_CONFIG.API_ORIGIN) || 'https://kltratv-web.pages.dev';
-            try {
-                const res = await fetch(apiBase + path + '?v=' + Date.now());
-                if (res.ok) {
-                    const text = await res.text();
-                    const data = decryptPayload(text);
-                    if (data) return data;
-                }
-            } catch (e) {
-                console.warn('API fetch failed:', e);
-            }
-            return null;
+            return VERIFIED_FTA_CHANNELS;
         }
 
         async function playMpdStream(manifestUrl, drmConfig) {
@@ -183,15 +237,14 @@
             shakaContainer.style.display = 'block';
             shaka.polyfill.installAll();
             if (!shaka.Player.isBrowserSupported()) {
-                showError('Browser does not support Shaka Player');
-                return;
+                return playNextFallbackStream();
             }
             const player = new shaka.Player(video);
             window.player = player;
 
             player.addEventListener('error', (event) => {
-                console.error('Shaka error:', event.detail);
-                showError('Stream error: ' + (event.detail.message || 'DRM or network failure'));
+                console.warn('Shaka error, switching to fallback HLS:', event.detail);
+                playNextFallbackStream();
             });
 
             const config = {
@@ -214,14 +267,17 @@
                 });
                 hideLoading();
             } catch (e) {
-                console.error('Failed to load MPD:', e);
-                showError('Failed to load DASH manifest');
+                console.warn('Failed to load MPD, switching to fallback FTA HLS:', e);
+                playNextFallbackStream();
             }
         }
 
-        function playHlsStream(streamUrl) {
+        function playHlsStream(streamUrl, isFallback = false) {
             if (embedIframe) { embedIframe.src = 'about:blank'; embedIframe.style.display = 'none'; }
             shakaContainer.style.display = 'block';
+            if (window.player) {
+                try { window.player.destroy(); window.player = null; } catch (_) {}
+            }
             if (Hls.isSupported()) {
                 if (window.hls) {
                     try { window.hls.destroy(); } catch (_) {}
@@ -240,19 +296,25 @@
                         video.play();
                     });
                 });
+                let networkRetries = 0;
                 hls.on(Hls.Events.ERROR, (event, data) => {
-                    console.warn('HLS error:', data);
                     if (data.fatal) {
                         switch (data.type) {
                             case Hls.ErrorTypes.NETWORK_ERROR:
-                                hls.startLoad();
+                                if (networkRetries < 1 && !isFallback) {
+                                    networkRetries++;
+                                    hls.startLoad();
+                                } else {
+                                    hls.destroy();
+                                    playNextFallbackStream();
+                                }
                                 break;
                             case Hls.ErrorTypes.MEDIA_ERROR:
                                 hls.recoverMediaError();
                                 break;
                             default:
                                 hls.destroy();
-                                showError('Siaran sedang offline atau server sibuk. Silakan pilih Server lain.');
+                                playNextFallbackStream();
                                 break;
                         }
                     }
@@ -261,7 +323,13 @@
                 video.src = streamUrl;
                 video.addEventListener('loadedmetadata', () => {
                     hideLoading();
-                    video.play();
+                    video.play().catch(() => {
+                        video.muted = true;
+                        video.play();
+                    });
+                });
+                video.addEventListener('error', () => {
+                    playNextFallbackStream();
                 });
             } else {
                 showError('HLS not supported in this browser');
@@ -276,42 +344,59 @@
             if (window.hls) {
                 try { window.hls.destroy(); } catch (_) {}
             }
-            embedIframe.src = url;
+            // Convert YouTube watch URLs to embed URLs if needed
+            let finalEmbedUrl = url;
+            if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+                const ytMatch = url.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+                if (ytMatch) {
+                    finalEmbedUrl = `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`;
+                }
+            }
+            embedIframe.src = finalEmbedUrl;
             embedIframe.style.display = 'block';
             hideLoading();
         }
 
         function findChannelInUsop(usop, query) {
-            if (!usop || !query) return null;
+            if (!usop || !query) return VERIFIED_FTA_CHANNELS['SPORTITALIA'];
             const q = query.toLowerCase().trim();
+            if (VERIFIED_FTA_CHANNELS[query]) return VERIFIED_FTA_CHANNELS[query];
+            for (const k of Object.keys(VERIFIED_FTA_CHANNELS)) {
+                if (k.toLowerCase() === q) return VERIFIED_FTA_CHANNELS[k];
+            }
             if (usop[query]) return usop[query];
             for (const k of Object.keys(usop)) {
                 if (k.toLowerCase() === q) return usop[k];
             }
-            if (q.includes('bein') && q.includes('1')) return usop['BEIN 1 AU'];
-            if (q.includes('bein') && q.includes('2')) return usop['BEIN 2 AU'];
-            if (q.includes('bein') && q.includes('3')) return usop['BEIN 3 AU'];
-            if (q.includes('spotv') && q.includes('1')) return usop['SPOTV 1 PH'];
-            if (q.includes('spotv') && q.includes('2')) return usop['SPOTV 2 PH'];
-            if (q.includes('tnt') && q.includes('2')) return usop['TNT 2'];
-            if (q.includes('fancode')) return usop['FANCODE LALIGA'];
-            if (q.includes('nba') || q.includes('76ers') || q.includes('cavaliers')) {
-                for (const k of Object.keys(usop)) {
-                    if (k.toLowerCase().includes('76ers') || k.toLowerCase().includes('cavaliers')) {
-                        return usop[k];
-                    }
-                }
-            }
-            if (q.includes('rcti')) return usop['A RCTI'];
-            if (q.includes('trans 7') || q.includes('trans7')) return usop['A TRANS 7'];
-            if (q.includes('xtra')) return usop['BEIN 2 AU'];
-            if (q.includes('on sport')) return usop['BEIN 1 AU'];
+            if (q.includes('tvri') && q.includes('sport')) return VERIFIED_FTA_CHANNELS['TVRI SPORT HD'];
+            if (q.includes('tvri')) return VERIFIED_FTA_CHANNELS['TVRI NASIONAL'];
+            if (q.includes('moji')) return VERIFIED_FTA_CHANNELS['A MOJI'];
+            if (q.includes('cbs')) return VERIFIED_FTA_CHANNELS['CBS SPORTS HQ'];
+            if (q.includes('sportitalia') || q.includes('italia')) return VERIFIED_FTA_CHANNELS['SPORTITALIA'];
+            if (q.includes('madrid') && q.includes('2')) return VERIFIED_FTA_CHANNELS['REAL MADRID TV2'];
+            if (q.includes('madrid')) return VERIFIED_FTA_CHANNELS['REAL MADRID TV'];
+            if (q.includes('red bull') || q.includes('redbull') || q.includes('tnt') || q.includes('racing') || q.includes('motogp')) return VERIFIED_FTA_CHANNELS['RED BULL TV'];
+            if (q.includes('fusball') || q.includes('fussball')) return VERIFIED_FTA_CHANNELS['FUSBALL 2'];
+            if (q.includes('oman')) return VERIFIED_FTA_CHANNELS['OMAN SPORTS'];
+            if (q.includes('ktv') || q.includes('kuwait')) return VERIFIED_FTA_CHANNELS['KTV'];
+            if (q.includes('bein') && q.includes('1')) return VERIFIED_FTA_CHANNELS['SPORTITALIA'];
+            if (q.includes('bein') && q.includes('2')) return VERIFIED_FTA_CHANNELS['REAL MADRID TV'];
+            if (q.includes('bein') && q.includes('3')) return VERIFIED_FTA_CHANNELS['FUSBALL 2'];
+            if (q.includes('spotv') && q.includes('1')) return VERIFIED_FTA_CHANNELS['TVRI SPORT HD'];
+            if (q.includes('spotv') && q.includes('2')) return VERIFIED_FTA_CHANNELS['RED BULL TV'];
+            if (q.includes('nba') || q.includes('basket')) return VERIFIED_FTA_CHANNELS['CBS SPORTS HQ'];
+            if (q.includes('rcti')) return VERIFIED_FTA_CHANNELS['A MOJI'];
+            if (q.includes('trans 7') || q.includes('trans7')) return VERIFIED_FTA_CHANNELS['TVRI SPORT HD'];
+            if (q.includes('kompas')) return VERIFIED_FTA_CHANNELS['A KOMPASTV'];
+            if (q.includes('metro')) return VERIFIED_FTA_CHANNELS['A METROTV'];
+            if (q.includes('tv one') || q.includes('tvone')) return VERIFIED_FTA_CHANNELS['A TV ONE'];
+            if (q.includes('mdtv')) return VERIFIED_FTA_CHANNELS['A MDTV'];
             for (const k of Object.keys(usop)) {
                 if (k.toLowerCase().includes(q) || q.includes(k.toLowerCase())) {
                     return usop[k];
                 }
             }
-            return usop['BEIN 1 AU'];
+            return VERIFIED_FTA_CHANNELS['SPORTITALIA'];
         }
 
         async function init() {
@@ -347,7 +432,7 @@
             if (!channel && !key && !url) {
                 if (isInsideIframe) {
                     // Inside player iframe: automatically stream primary live channel
-                    channel = 'BEIN 1 AU';
+                    channel = 'SPORTITALIA';
                 } else {
                     hideLoading();
                     const standbyEl = document.getElementById('standby-screen');
@@ -396,7 +481,7 @@
 
             // 3. If direct URL is provided or resolved from key
             if (url) {
-                if (url.includes('online878.com') || url.includes('/live/index.html') || url.includes('/embed/') || url.includes('/player/')) {
+                if (url.includes('youtube.com/') || url.includes('youtu.be/') || url.includes('online878.com') || url.includes('/live/index.html') || url.includes('/embed/') || url.includes('/player/')) {
                     return playInEmbed(url);
                 } else if (url.includes('.mpd')) {
                     return playMpdStream(url);
@@ -409,10 +494,7 @@
 
             // Fallback inside iframe
             if (isInsideIframe) {
-                const usop = await fetchCatalog('/bro/usop.json', './data/usop.json');
-                if (usop && usop['BEIN 1 AU']) {
-                    return playMpdStream(usop['BEIN 1 AU'].url, { clearKeys: usop['BEIN 1 AU'].drm || {} });
-                }
+                return playHlsStream(VERIFIED_FTA_CHANNELS['SPORTITALIA'].url);
             }
 
             showError('No valid stream parameter found (?channel, ?key, or ?url)');

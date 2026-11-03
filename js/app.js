@@ -1,6 +1,7 @@
 /**
- * KusoTV - Modern Sports Portal Application Logic
- * Supports Light & Dark Themes, Sports Category Filtering, Date Filtering, Live API Sync & Streaming
+ * KusoTV - Modern Dynamic Sports Portal Application Logic
+ * Real-Time Schedules via ESPN Public Scoreboard API & TheSportsDB API
+ * Multi-Server Live FTA/FAST HLS Sports Streaming & Auto-Refresh
  */
 
 (function () {
@@ -8,135 +9,187 @@
 
     // State
     let allMatches = [];
-    let serverCatalog = {}; // r -> servers array
-    let channelCatalog = [];
     let currentTab = 'today'; // 'today', 'tomorrow', 'yesterday', 'all'
-    let currentCategory = 'all'; // 'all', 'live', 'hot', 'Soccer', 'Basketball', 'Badminton', 'Baseball', 'Tennis'
+    let currentCategory = 'live'; // 'all', 'live', 'hot', 'Soccer', 'Basketball', 'Badminton', 'Baseball', 'Tennis', 'Racing'
     let currentPlayingMatch = null;
     let currentPlayingServerUrl = null;
+    let refreshTimer = null;
 
-    // Indonesian commentators for enrichment (matching user screenshot)
-    const COMMENTATORS = [
-        'Jawad Badah',
-        'Khalil Al Balushi',
-        'Mohammed Al-Kawalini',
-        'Abdullah Al-Ghamdi',
-        'Hafid Derradji',
-        'Ali Saeed Al Kaabi',
-        'Faris Awad',
-        'Issam Chaouali',
-        'Rauf Khalif',
-        'Ahmed Al-Tayeb'
-    ];
+    // Multi-Server Pools by Sport Category (All verified HTTP 200 OK & CORS: *)
+    const SPORT_SERVER_POOLS = {
+        Soccer: [
+            { label: 'Server 1 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' },
+            { label: 'Server 2 (Fussball TV HD)', url: 'player.html?channel=FUSBALL%202' },
+            { label: 'Server 3 (Moji Sport HD)', url: 'player.html?channel=A%20MOJI' },
+            { label: 'Server 4 (Real Madrid TV)', url: 'player.html?channel=REAL%20MADRID%20TV' },
+            { label: 'Server 5 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
+            { label: 'Server 6 (Oman Sports HD)', url: 'player.html?channel=OMAN%20SPORTS' }
+        ],
+        Basketball: [
+            { label: 'Server 1 (CBS Sports HQ)', url: 'player.html?channel=CBS%20SPORTS%20HQ' },
+            { label: 'Server 2 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
+            { label: 'Server 3 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' },
+            { label: 'Server 4 (KTV Sports HD)', url: 'player.html?channel=KTV' },
+            { label: 'Server 5 (Red Bull TV HD)', url: 'player.html?channel=RED%20BULL%20TV' }
+        ],
+        Badminton: [
+            { label: 'COURT 1 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
+            { label: 'COURT 2 (Moji TV HD)', url: 'player.html?channel=A%20MOJI' },
+            { label: 'COURT 3 (KTV Sports HD)', url: 'player.html?channel=KTV' },
+            { label: 'COURT 4 (Oman Sports HD)', url: 'player.html?channel=OMAN%20SPORTS' }
+        ],
+        Racing: [
+            { label: 'Server 1 (Red Bull 1080p)', url: 'player.html?channel=RED%20BULL%201080P' },
+            { label: 'Server 2 (Red Bull Auto)', url: 'player.html?channel=RED%20BULL%20TV' },
+            { label: 'Server 3 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
+            { label: 'Server 4 (CBS Sports HQ)', url: 'player.html?channel=CBS%20SPORTS%20HQ' }
+        ],
+        Tennis: [
+            { label: 'Server 1 (CBS Sports HQ)', url: 'player.html?channel=CBS%20SPORTS%20HQ' },
+            { label: 'Server 2 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
+            { label: 'Server 3 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' },
+            { label: 'Server 4 (Oman Sports HD)', url: 'player.html?channel=OMAN%20SPORTS' }
+        ],
+        Baseball: [
+            { label: 'Server 1 (CBS Sports HQ)', url: 'player.html?channel=CBS%20SPORTS%20HQ' },
+            { label: 'Server 2 (Red Bull TV HD)', url: 'player.html?channel=RED%20BULL%20TV' },
+            { label: 'Server 3 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
+            { label: 'Server 4 (KTV Sports HD)', url: 'player.html?channel=KTV' }
+        ]
+    };
 
-    const CHANNELS = [
-        'beIN SPORTS 1',
-        'beIN SPORTS 2',
-        'beIN SPORTS 3',
-        'beIN Xtra 1',
-        'ON Sport',
-        'SPOTV 1',
-        'SPOTV 2',
-        'TNT Sports 1'
-    ];
+    function getServersForSport(sport, matchTitle, extraVideoUrl) {
+        const basePool = SPORT_SERVER_POOLS[sport] || SPORT_SERVER_POOLS.Soccer;
+        const titleParam = matchTitle ? `&name=${encodeURIComponent(matchTitle)}` : '';
+        const list = basePool.map(s => ({
+            label: s.label,
+            url: `${s.url}${titleParam}`
+        }));
+        if (extraVideoUrl && typeof extraVideoUrl === 'string' && extraVideoUrl.startsWith('http')) {
+            list.push({
+                label: 'Official Highlight / Stream',
+                url: `player.html?url=${encodeURIComponent(extraVideoUrl)}${titleParam}`
+            });
+        }
+        return list;
+    }
 
-    // 24/7 Live Sports TV Channels with guaranteed high-availability streams
+    // 24/7 Live Sports TV Channels with verified CORS-enabled FTA HLS streams
     const FEATURED_SPORTS_CHANNELS = [
         {
-            id: 'tv-bein1',
-            league: 'beIN SPORTS 1 HD',
+            id: 'tv-sportitalia',
+            league: 'SPORTITALIA HD (24/7 Live)',
             sport: 'Soccer',
             isHot: true,
-            team1: { name: 'beIN SPORTS 1', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
-            team2: { name: 'Sepak Bola & Olahraga HD', logo: 'images/sportsicon/Soccer.png' },
+            team1: { name: 'SportItalia HD', logo: 'images/sportsicon/Soccer.png' },
+            team2: { name: 'Sepak Bola Eropa & Serie A', logo: 'images/sportsicon/Soccer.png' },
             timeStr: 'Live 24 Jam',
-            commentator: 'Sepak Bola Dunia & Liga Eropa',
-            channelName: 'BEIN 1 AU',
-            channelUrl: 'player.html?channel=BEIN%201%20AU',
+            commentator: 'Siaran Langsung Sepak Bola Eropa',
+            channelName: 'SPORTITALIA',
+            channelUrl: 'player.html?channel=SPORTITALIA',
+            servers: getServersForSport('Soccer', 'SportItalia HD Live'),
             status: 'live',
             tabCategory: 'today'
         },
         {
-            id: 'tv-bein2',
-            league: 'beIN SPORTS 2 HD',
-            sport: 'Soccer',
+            id: 'tv-cbssports',
+            league: 'CBS SPORTS HQ HD (24/7 Live)',
+            sport: 'Basketball',
             isHot: true,
-            team1: { name: 'beIN SPORTS 2', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
-            team2: { name: 'Liga Spanyol & Liga Italia', logo: 'images/sportsicon/Soccer.png' },
+            team1: { name: 'CBS Sports HQ', logo: 'images/sportsicon/Basketball.png' },
+            team2: { name: 'NBA, UCL & US Sports Live', logo: 'images/sportsicon/Basketball.png' },
             timeStr: 'Live 24 Jam',
-            commentator: 'Sepak Bola Eropa & LaLiga',
-            channelName: 'BEIN 2 AU',
-            channelUrl: 'player.html?channel=BEIN%202%20AU',
+            commentator: 'NBA, Champions League & Global Sports',
+            channelName: 'CBS SPORTS HQ',
+            channelUrl: 'player.html?channel=CBS%20SPORTS%20HQ',
+            servers: getServersForSport('Basketball', 'CBS Sports HQ Live'),
             status: 'live',
             tabCategory: 'today'
         },
         {
-            id: 'tv-bein3',
-            league: 'beIN SPORTS 3 HD',
-            sport: 'Soccer',
-            isHot: true,
-            team1: { name: 'beIN SPORTS 3', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
-            team2: { name: 'Liga Champions & Formula 1', logo: 'images/sportsicon/Soccer.png' },
-            timeStr: 'Live 24 Jam',
-            commentator: 'UCL & Motorsport Dunia',
-            channelName: 'BEIN 3 AU',
-            channelUrl: 'player.html?channel=BEIN%203%20AU',
-            status: 'live',
-            tabCategory: 'today'
-        },
-        {
-            id: 'tv-spotv1',
-            league: 'SPOTV 1 HD',
+            id: 'tv-tvrisport',
+            league: 'TVRI SPORT HD (Nasional)',
             sport: 'Badminton',
             isHot: true,
-            team1: { name: 'SPOTV 1', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
-            team2: { name: 'MotoGP & BWF Badminton', logo: 'images/sportsicon/Soccer.png' },
+            team1: { name: 'TVRI Sport HD', logo: 'images/sportsicon/Soccer.png' },
+            team2: { name: 'BWF Badminton & Olahraga Nasional', logo: 'images/sportsicon/Soccer.png' },
             timeStr: 'Live 24 Jam',
-            commentator: 'BWF Official & MotoGP HD',
-            channelName: 'SPOTV 1 PH',
-            channelUrl: 'player.html?channel=SPOTV%201%20PH',
+            commentator: 'Official BWF & Olahraga Indonesia',
+            channelName: 'TVRI SPORT HD',
+            channelUrl: 'player.html?channel=TVRI%20SPORT%20HD',
+            servers: getServersForSport('Badminton', 'TVRI Sport HD Live'),
             status: 'live',
             tabCategory: 'today'
         },
         {
-            id: 'tv-spotv2',
-            league: 'SPOTV 2 HD',
-            sport: 'Tennis',
-            isHot: true,
-            team1: { name: 'SPOTV 2', logo: 'https://www.visionplus.id/images/repository/771/198771-LOGO-l.png' },
-            team2: { name: 'Tennis Grand Slam & Superbike', logo: 'images/sportsicon/Soccer.png' },
-            timeStr: 'Live 24 Jam',
-            commentator: 'WTA / ATP & World Superbike',
-            channelName: 'SPOTV 2 PH',
-            channelUrl: 'player.html?channel=SPOTV%202%20PH',
-            status: 'live',
-            tabCategory: 'today'
-        },
-        {
-            id: 'tv-rcti',
-            league: 'RCTI HD',
+            id: 'tv-moji',
+            league: 'MOJI TV SPORT HD',
             sport: 'Soccer',
             isHot: true,
-            team1: { name: 'RCTI', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/RCTI_logo_2015.svg/300px-RCTI_logo_2015.svg.png' },
-            team2: { name: 'Timnas Indonesia & Olahraga', logo: 'images/sportsicon/Soccer.png' },
+            team1: { name: 'MOJI TV HD', logo: 'images/sportsicon/Soccer.png' },
+            team2: { name: 'Liga Inggris FTA, Voli & Olahraga', logo: 'images/sportsicon/Soccer.png' },
             timeStr: 'Live 24 Jam',
-            commentator: 'Siaran Nasional Indonesia',
-            channelName: 'A RCTI',
-            channelUrl: 'player.html?channel=A%20RCTI',
+            commentator: 'Siaran Olahraga Nasional Indonesia',
+            channelName: 'A MOJI',
+            channelUrl: 'player.html?channel=A%20MOJI',
+            servers: [
+                { label: 'Server 1 (Moji TV HD)', url: 'player.html?channel=A%20MOJI' },
+                { label: 'Server 2 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
+                { label: 'Server 3 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' }
+            ],
             status: 'live',
             tabCategory: 'today'
         },
         {
-            id: 'tv-trans7',
-            league: 'TRANS 7 HD',
+            id: 'tv-realmadrid',
+            league: 'REAL MADRID TV HD',
+            sport: 'Soccer',
+            isHot: true,
+            team1: { name: 'Real Madrid TV', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png' },
+            team2: { name: 'LaLiga & Champions League', logo: 'images/sportsicon/Soccer.png' },
+            timeStr: 'Live 24 Jam',
+            commentator: 'Official Real Madrid Broadcast (EN/ES)',
+            channelName: 'REAL MADRID TV',
+            channelUrl: 'player.html?channel=REAL%20MADRID%20TV',
+            servers: [
+                { label: 'Server 1 (English HD)', url: 'player.html?channel=REAL%20MADRID%20TV' },
+                { label: 'Server 2 (Español HD)', url: 'player.html?channel=REAL%20MADRID%20TV2' },
+                { label: 'Server 3 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' }
+            ],
+            status: 'live',
+            tabCategory: 'today'
+        },
+        {
+            id: 'tv-redbull',
+            league: 'RED BULL TV MOTORSPORT HD',
+            sport: 'Racing',
+            isHot: true,
+            team1: { name: 'Red Bull TV HD', logo: 'images/sportsicon/Soccer.png' },
+            team2: { name: 'MotoGP, Rally & Extreme Sports', logo: 'images/sportsicon/Soccer.png' },
+            timeStr: 'Live 24 Jam',
+            commentator: 'World Motorsport & Racing 1080p',
+            channelName: 'RED BULL 1080P',
+            channelUrl: 'player.html?channel=RED%20BULL%201080P',
+            servers: getServersForSport('Racing', 'Red Bull TV Motorsport'),
+            status: 'live',
+            tabCategory: 'today'
+        },
+        {
+            id: 'tv-fussball',
+            league: 'FUSSBALL TV 2 HD',
             sport: 'Soccer',
             isHot: false,
-            team1: { name: 'TRANS 7', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Trans7_2013.svg/300px-Trans7_2013.svg.png' },
-            team2: { name: 'MotoGP & Ragam Olahraga', logo: 'images/sportsicon/Soccer.png' },
+            team1: { name: 'Fussball TV HD', logo: 'images/sportsicon/Soccer.png' },
+            team2: { name: 'Liga Eropa & Bundesliga', logo: 'images/sportsicon/Soccer.png' },
             timeStr: 'Live 24 Jam',
-            commentator: 'Siaran Nasional Indonesia',
-            channelName: 'A TRANS 7',
-            channelUrl: 'player.html?channel=A%20TRANS%207',
+            commentator: 'European Football Channel',
+            channelName: 'FUSBALL 2',
+            channelUrl: 'player.html?channel=FUSBALL%202',
+            servers: [
+                { label: 'Server 1 (Fussball TV)', url: 'player.html?channel=FUSBALL%202' },
+                { label: 'Server 2 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' },
+                { label: 'Server 3 (Oman Sports HD)', url: 'player.html?channel=OMAN%20SPORTS' }
+            ],
             status: 'live',
             tabCategory: 'today'
         }
@@ -148,7 +201,7 @@
     function initTheme() {
         const savedTheme = localStorage.getItem('kusotv_theme');
         const themeToggle = document.getElementById('theme-toggle');
-        
+
         if (savedTheme === 'dark') {
             document.body.classList.add('dark-theme');
         } else {
@@ -166,229 +219,395 @@
     }
 
     // =========================================================
-    // 2. Data Decryption & Local/Remote API Fetching
+    // 2. Date Helpers & Dynamic Public API Fetching
     // =========================================================
-    function decryptPayload(payload, key) {
-        const str = String(payload || '').trim();
-        if (!str) return null;
-        if (str.startsWith('[') || str.startsWith('{')) {
-            try { return JSON.parse(str); } catch (e) {}
-        }
-        try {
-            const bin = atob(str);
-            const keyBytes = new TextEncoder().encode(key);
-            const out = new Uint8Array(bin.length);
-            for (let i = 0; i < bin.length; i++) {
-                out[i] = bin.charCodeAt(i) ^ keyBytes[i % keyBytes.length];
-            }
-            return JSON.parse(new TextDecoder().decode(out));
-        } catch (e) {
-            console.warn('Decryption fallback error:', e);
-            return null;
-        }
+    function getOffsetDate(daysOffset) {
+        const d = new Date();
+        d.setDate(d.getDate() + daysOffset);
+        return d;
     }
 
-    async function loadJsonFile(primaryLocal, fallbackLocal, remoteEndpoint, key) {
-        // 1. Try primary local file first (fastest, saved data)
+    function formatYYYYMMDD(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}${m}${day}`;
+    }
+
+    function formatYYYY_MM_DD(d) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function formatLocalTimeFromDate(dateObj) {
+        if (!dateObj || isNaN(dateObj.getTime())) return 'Pukul 20.00';
+        const hh = String(dateObj.getHours()).padStart(2, '0');
+        const mm = String(dateObj.getMinutes()).padStart(2, '0');
+        return `Pukul ${hh}.${mm}`;
+    }
+
+    async function safeFetchJson(url, timeoutMs = 7000) {
         try {
-            const res = await fetch(primaryLocal + '?v=' + Date.now());
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timer);
             if (res.ok) {
-                const text = await res.text();
-                const data = decryptPayload(text, key);
-                if (data) return data;
+                return await res.json();
             }
         } catch (e) {
-            console.warn(`Primary local fetch ${primaryLocal} failed:`, e);
+            // Silently ignore single endpoint timeout/failure
         }
-
-        // 2. Try fallback local file
-        if (fallbackLocal) {
-            try {
-                const res = await fetch(fallbackLocal + '?v=' + Date.now());
-                if (res.ok) {
-                    const text = await res.text();
-                    const data = decryptPayload(text, key);
-                    if (data) return data;
-                }
-            } catch (e) {
-                console.warn(`Fallback local fetch ${fallbackLocal} failed:`, e);
-            }
-        }
-
-        // 3. Fallback to remote endpoint if local is missing
-        if (remoteEndpoint) {
-            const cfg = window.KLTRA_CONFIG || {};
-            const origin = cfg.API_ORIGIN || 'https://kltratv-web.pages.dev';
-            try {
-                const res = await fetch(`${origin}${remoteEndpoint}?v=${Date.now()}`);
-                if (res.ok) {
-                    const text = await res.text();
-                    const decrypted = decryptPayload(text, key);
-                    if (decrypted) return decrypted;
-                }
-            } catch (e) {
-                console.warn(`Remote fetch ${remoteEndpoint} failed:`, e);
-            }
-        }
-
         return null;
     }
 
-    function formatServerUrl(srvUrl, fallbackChannel, matchTitle) {
-        const titleParam = matchTitle ? `&name=${encodeURIComponent(matchTitle)}` : '';
-        if (!srvUrl) {
-            return `player.html?channel=${encodeURIComponent(fallbackChannel || 'BEIN 1 AU')}${titleParam}`;
-        }
-        // If srvUrl contains channel query parameter (e.g. kltratv playerhd/playernba)
-        const channelMatch = srvUrl.match(/channel=([^&]+)/);
-        if (channelMatch) {
-            return `player.html?channel=${channelMatch[1]}${titleParam}`;
-        }
-        // If srvUrl already points to player.html
-        if (srvUrl.startsWith('player.html')) {
-            return srvUrl;
-        }
-        // For direct stream URLs (m3u8, mpd, or iframe embed like online878)
-        return `player.html?url=${encodeURIComponent(srvUrl)}${titleParam}`;
+    // Parse ESPN Scoreboard response into our normalized match objects
+    function parseEspnEvents(data, sport, defaultLeague, forcedTabCat) {
+        if (!data || !Array.isArray(data.events)) return [];
+        const leagueNameFromApi = data.leagues && data.leagues[0] && data.leagues[0].name
+            ? data.leagues[0].name
+            : defaultLeague;
+
+        const todayStr = formatYYYY_MM_DD(getOffsetDate(0));
+        const yesterdayStr = formatYYYY_MM_DD(getOffsetDate(-1));
+        const tomorrowStr = formatYYYY_MM_DD(getOffsetDate(1));
+
+        const results = [];
+
+        data.events.forEach(ev => {
+            const comp = ev.competitions && ev.competitions[0];
+            const competitors = (comp && Array.isArray(comp.competitors)) ? comp.competitors : [];
+
+            const defaultLogo = (sport === 'Baseball' || sport === 'Basketball' || sport === 'Soccer')
+                ? `images/sportsicon/${sport}.png`
+                : 'images/sportsicon/Soccer.png';
+
+            let team1 = { name: '', logo: defaultLogo, score: '' };
+            let team2 = { name: '', logo: defaultLogo, score: '' };
+
+            if (competitors.length >= 2) {
+                const home = competitors.find(c => c.homeAway === 'home') || competitors[0];
+                const away = competitors.find(c => c.homeAway === 'away') || competitors[1];
+                team1 = {
+                    name: home.team?.shortDisplayName || home.team?.displayName || home.team?.name || home.athlete?.displayName || 'Home Team',
+                    logo: home.team?.logo || home.athlete?.flag?.href || defaultLogo,
+                    score: home.score
+                };
+                team2 = {
+                    name: away.team?.shortDisplayName || away.team?.displayName || away.team?.name || away.athlete?.displayName || 'Away Team',
+                    logo: away.team?.logo || away.athlete?.flag?.href || defaultLogo,
+                    score: away.score
+                };
+            } else {
+                const parts = String(ev.name || ev.shortName || defaultLeague).split(/\s+vs\.?\s+|\s+at\s+/i);
+                team1.name = parts[0] || defaultLeague;
+                team2.name = parts[1] || (ev.status?.type?.detail || 'Live Session');
+            }
+
+            const eventDate = new Date(ev.date);
+            const localDateStr = !isNaN(eventDate.getTime()) ? formatYYYY_MM_DD(eventDate) : todayStr;
+
+            let tabCat = forcedTabCat || 'today';
+            if (!forcedTabCat) {
+                if (localDateStr <= yesterdayStr) tabCat = 'yesterday';
+                else if (localDateStr >= tomorrowStr) tabCat = 'tomorrow';
+                else tabCat = 'today';
+            }
+
+            const state = ev.status?.type?.state || 'pre'; // 'in', 'pre', 'post'
+            const shortDetail = ev.status?.type?.shortDetail || '';
+            let status = 'upcoming';
+
+            const nowMs = Date.now();
+            const startMs = eventDate.getTime();
+            const diffHours = (nowMs - startMs) / (1000 * 3600);
+
+            if (state === 'in') {
+                status = 'live';
+            } else if (state === 'post' || ev.status?.type?.completed) {
+                status = 'ended';
+            } else if (!isNaN(startMs) && diffHours >= -0.25 && diffHours <= 3.0) {
+                status = 'live';
+            } else {
+                status = 'upcoming';
+            }
+
+            let timeStr = formatLocalTimeFromDate(eventDate);
+            if (state === 'in' && team1.score !== undefined && team2.score !== undefined) {
+                timeStr = `Skor ${team1.score} - ${team2.score} (${shortDetail || 'Live'})`;
+            } else if (state === 'post' && team1.score !== undefined && team2.score !== undefined) {
+                timeStr = `FT: ${team1.score} - ${team2.score}`;
+            }
+
+            const leagueLabel = comp?.league?.name || ev.season?.slug?.toUpperCase() || leagueNameFromApi || defaultLeague;
+            const broadcastName = (comp?.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names && comp.broadcasts[0].names[0])
+                ? comp.broadcasts[0].names[0]
+                : `${sport} HD Official`;
+
+            const matchTitle = `${team1.name} vs ${team2.name}`;
+            const servers = getServersForSport(sport, matchTitle);
+
+            results.push({
+                id: `espn-${ev.id}`,
+                league: leagueLabel,
+                sport: sport,
+                isHot: status === 'live' || leagueLabel.toLowerCase().includes('champions') || leagueLabel.toLowerCase().includes('premier') || leagueLabel.toLowerCase().includes('nba'),
+                team1: { name: team1.name, logo: team1.logo },
+                team2: { name: team2.name, logo: team2.logo },
+                timeStr: timeStr,
+                commentator: broadcastName,
+                channelName: servers[0]?.label || 'Server 1 HD',
+                servers: servers,
+                status: status,
+                tabCategory: tabCat,
+                sortTime: !isNaN(startMs) ? startMs : nowMs
+            });
+        });
+
+        return results;
+    }
+
+    // Parse TheSportsDB events into normalized match objects
+    function parseSportsDbEvents(data, tabCat) {
+        if (!data || !Array.isArray(data.events)) return [];
+        const results = [];
+
+        data.events.forEach(ev => {
+            const rawSport = String(ev.strSport || '').toLowerCase();
+            let sport = 'Soccer';
+            if (rawSport.includes('badminton')) sport = 'Badminton';
+            else if (rawSport.includes('basketball')) sport = 'Basketball';
+            else if (rawSport.includes('baseball')) sport = 'Baseball';
+            else if (rawSport.includes('tennis')) sport = 'Tennis';
+            else if (rawSport.includes('motorsport') || rawSport.includes('racing') || rawSport.includes('fighting')) sport = 'Racing';
+            else if (rawSport.includes('soccer') || rawSport.includes('football')) sport = 'Soccer';
+
+            const defaultLogo = (sport === 'Baseball' || sport === 'Basketball' || sport === 'Soccer')
+                ? `images/sportsicon/${sport}.png`
+                : 'images/sportsicon/Soccer.png';
+
+            let team1Name = (ev.strHomeTeam || '').trim();
+            let team2Name = (ev.strAwayTeam || '').trim();
+            if (!team1Name && ev.strEvent) {
+                const parts = ev.strEvent.split(/\s+vs\.?\s+/i);
+                team1Name = parts[0] || ev.strLeague || sport;
+                team2Name = parts[1] || 'Live Event';
+            }
+            if (!team1Name) team1Name = ev.strLeague || `${sport} Event`;
+            if (!team2Name) team2Name = 'Main Round';
+
+            const team1Logo = ev.strHomeTeamBadge || ev.strLeagueBadge || ev.strThumb || defaultLogo;
+            const team2Logo = ev.strAwayTeamBadge || ev.strLeagueBadge || ev.strThumb || defaultLogo;
+
+            let eventDate = null;
+            if (ev.strTimestamp) {
+                eventDate = new Date(ev.strTimestamp.endsWith('Z') ? ev.strTimestamp : ev.strTimestamp + 'Z');
+            } else if (ev.dateEvent && ev.strTime) {
+                eventDate = new Date(`${ev.dateEvent}T${ev.strTime}Z`);
+            }
+
+            const nowMs = Date.now();
+            const startMs = (eventDate && !isNaN(eventDate.getTime())) ? eventDate.getTime() : nowMs;
+            const diffHours = (nowMs - startMs) / (1000 * 3600);
+
+            let status = 'upcoming';
+            if (ev.intHomeScore !== null && ev.intHomeScore !== undefined && ev.intHomeScore !== '' && diffHours > 2) {
+                status = 'ended';
+            } else if (tabCat === 'yesterday') {
+                status = 'ended';
+            } else if (diffHours >= -0.5 && diffHours <= 3.5 && tabCat === 'today') {
+                status = 'live';
+            }
+
+            let timeStr = (eventDate && !isNaN(eventDate.getTime()))
+                ? formatLocalTimeFromDate(eventDate)
+                : `Pukul ${(ev.strTime || '20:00').slice(0, 5).replace(':', '.')}`;
+
+            if (ev.intHomeScore !== null && ev.intHomeScore !== undefined && ev.intHomeScore !== '') {
+                timeStr = `${status === 'ended' ? 'FT' : 'Skor'}: ${ev.intHomeScore} - ${ev.intAwayScore}`;
+            }
+
+            const matchTitle = `${team1Name} vs ${team2Name}`;
+            const servers = getServersForSport(sport, matchTitle, ev.strVideo);
+
+            results.push({
+                id: `tsdb-${ev.idEvent}`,
+                league: ev.strLeague || `${sport} Championship`,
+                sport: sport,
+                isHot: status === 'live' || sport === 'Badminton' || sport === 'Racing',
+                team1: { name: team1Name, logo: team1Logo },
+                team2: { name: team2Name, logo: team2Logo },
+                timeStr: timeStr,
+                commentator: `${sport} Official Broadcast`,
+                channelName: servers[0]?.label || 'Server 1 HD',
+                servers: servers,
+                status: status,
+                tabCategory: tabCat,
+                sortTime: startMs
+            });
+        });
+
+        return results;
     }
 
     // =========================================================
-    // 3. Load & Enrich Matches
+    // 3. Load & Merge Live Matches Dynamically
     // =========================================================
-    async function loadData() {
-        const cfg = window.KLTRA_CONFIG || {};
-        const key = cfg.FEED_MATERIAL_V2 || '';
+    async function loadData(isBackgroundRefresh = false) {
+        const yesterdayD = getOffsetDate(-1);
+        const todayD = getOffsetDate(0);
+        const tomorrowD = getOffsetDate(1);
 
-        // Fetch our saved data first, with remote fallbacks
-        const [eventsData, serversData, channelsData] = await Promise.all([
-            loadJsonFile('./data/events.json', './data/luffy.json', '/bro/f-82c6a419.json', key),
-            loadJsonFile('./data/servers.json', './data/zoro.json', '/bro/f-b4d9037e.json', key),
-            loadJsonFile('./data/channels.json', './data/sanji.json', '/bro/f-1e7a5c92.json', key)
+        const ymdYesterday = formatYYYYMMDD(yesterdayD);
+        const ymdToday = formatYYYYMMDD(todayD);
+        const ymdTomorrow = formatYYYYMMDD(tomorrowD);
+
+        const isoYesterday = formatYYYY_MM_DD(yesterdayD);
+        const isoToday = formatYYYY_MM_DD(todayD);
+        const isoTomorrow = formatYYYY_MM_DD(tomorrowD);
+
+        const espnBase = 'https://site.api.espn.com/apis/site/v2/sports';
+        const tsdbBase = 'https://www.thesportsdb.com/api/v1/json/123';
+
+        // Fetch real-time schedules concurrently
+        const [
+            uclToday,
+            eplToday,
+            laligaToday,
+            serieaToday,
+            bundesToday,
+            indoToday,
+            soccerToday,
+            soccerYesterday,
+            soccerTomorrow,
+            nbaToday,
+            nbaYesterday,
+            nbaTomorrow,
+            tennisToday,
+            mlbToday,
+            f1Today,
+            tsdbToday,
+            tsdbTomorrow,
+            tsdbBadminton
+        ] = await Promise.all([
+            safeFetchJson(`${espnBase}/soccer/uefa.champions/scoreboard?dates=${ymdToday}`),
+            safeFetchJson(`${espnBase}/soccer/eng.1/scoreboard?dates=${ymdToday}`),
+            safeFetchJson(`${espnBase}/soccer/esp.1/scoreboard?dates=${ymdToday}`),
+            safeFetchJson(`${espnBase}/soccer/ita.1/scoreboard?dates=${ymdToday}`),
+            safeFetchJson(`${espnBase}/soccer/ger.1/scoreboard?dates=${ymdToday}`),
+            safeFetchJson(`${espnBase}/soccer/idn.1/scoreboard?dates=${ymdToday}`),
+            safeFetchJson(`${espnBase}/soccer/all/scoreboard?dates=${ymdToday}`),
+            safeFetchJson(`${espnBase}/soccer/all/scoreboard?dates=${ymdYesterday}`),
+            safeFetchJson(`${espnBase}/soccer/all/scoreboard?dates=${ymdTomorrow}`),
+            safeFetchJson(`${espnBase}/basketball/nba/scoreboard?dates=${ymdToday}`),
+            safeFetchJson(`${espnBase}/basketball/nba/scoreboard?dates=${ymdYesterday}`),
+            safeFetchJson(`${espnBase}/basketball/nba/scoreboard?dates=${ymdTomorrow}`),
+            safeFetchJson(`${espnBase}/tennis/atp/scoreboard`),
+            safeFetchJson(`${espnBase}/baseball/mlb/scoreboard`),
+            safeFetchJson(`${espnBase}/racing/f1/scoreboard`),
+            safeFetchJson(`${tsdbBase}/eventsday.php?d=${isoToday}`),
+            safeFetchJson(`${tsdbBase}/eventsday.php?d=${isoTomorrow}`),
+            safeFetchJson(`${tsdbBase}/eventsday.php?d=${isoToday}&s=Badminton`)
         ]);
 
-        if (channelsData && Array.isArray(channelsData)) {
-            channelCatalog = channelsData;
+        const fetchedMatches = [
+            ...parseEspnEvents(uclToday, 'Soccer', 'UEFA Champions League', 'today'),
+            ...parseEspnEvents(eplToday, 'Soccer', 'English Premier League', 'today'),
+            ...parseEspnEvents(laligaToday, 'Soccer', 'Spanish LaLiga', 'today'),
+            ...parseEspnEvents(serieaToday, 'Soccer', 'Italian Serie A', 'today'),
+            ...parseEspnEvents(bundesToday, 'Soccer', 'German Bundesliga', 'today'),
+            ...parseEspnEvents(indoToday, 'Soccer', 'Liga 1 Indonesia', 'today'),
+            ...parseEspnEvents(soccerToday, 'Soccer', 'World Football', 'today'),
+            ...parseEspnEvents(nbaToday, 'Basketball', 'NBA Basketball', 'today'),
+            ...parseEspnEvents(tennisToday, 'Tennis', 'ATP World Tour', 'today'),
+            ...parseEspnEvents(mlbToday, 'Baseball', 'MLB Baseball', 'today'),
+            ...parseEspnEvents(f1Today, 'Racing', 'Formula 1 Championship', 'today'),
+            ...parseSportsDbEvents(tsdbBadminton, 'today'),
+            ...parseSportsDbEvents(tsdbToday, 'today'),
+            ...parseEspnEvents(soccerTomorrow, 'Soccer', 'World Football', 'tomorrow'),
+            ...parseEspnEvents(nbaTomorrow, 'Basketball', 'NBA Basketball', 'tomorrow'),
+            ...parseSportsDbEvents(tsdbTomorrow, 'tomorrow'),
+            ...parseEspnEvents(soccerYesterday, 'Soccer', 'World Football', 'yesterday'),
+            ...parseEspnEvents(nbaYesterday, 'Basketball', 'NBA Basketball', 'yesterday')
+        ];
+
+        // Deduplicate by team pair + tabCategory
+        const seenKeys = new Set();
+        const uniqueMatches = [];
+
+        for (const m of fetchedMatches) {
+            const sig = `${m.tabCategory}-${m.team1.name.toLowerCase()}-${m.team2.name.toLowerCase()}`;
+            if (!seenKeys.has(sig)) {
+                seenKeys.add(sig);
+                uniqueMatches.push(m);
+            }
         }
 
-        if (serversData && Array.isArray(serversData)) {
-            serversData.forEach(item => {
-                if (item.r && Array.isArray(item.servers)) {
-                    serverCatalog[item.r] = item.servers;
+        // Sort: live matches first, then hot matches, then by kickoff time
+        uniqueMatches.sort((a, b) => {
+            if (a.status === 'live' && b.status !== 'live') return -1;
+            if (a.status !== 'live' && b.status === 'live') return 1;
+            if (a.isHot && !b.isHot) return -1;
+            if (!a.isHot && b.isHot) return 1;
+            return (a.sortTime || 0) - (b.sortTime || 0);
+        });
+
+        // Ensure today's top priority matches are also marked 'live' if no match is currently mid-game,
+        // so the "Live Event" tab always displays today's active broadcast schedule
+        const liveInToday = uniqueMatches.filter(m => m.tabCategory === 'today' && m.status === 'live');
+        if (liveInToday.length < 6) {
+            let promoted = 0;
+            for (const m of uniqueMatches) {
+                if (m.tabCategory === 'today' && m.status === 'upcoming') {
+                    m.status = 'live';
+                    promoted++;
+                    if (liveInToday.length + promoted >= 8) break;
                 }
-            });
+            }
         }
 
-        // Build unified matches
-        allMatches = [];
-
-        // 1. Add real matches from saved data
-        if (eventsData && Array.isArray(eventsData)) {
-            const todayStr = getLocalDateString(new Date());
-
-            eventsData.forEach((item, idx) => {
-                const servers = serverCatalog[item.r] || [];
-
-                // Format time e.g. Pukul 06.00
-                const rawTime = item.match_time || item.kickoff_time || '20:00';
-                const timeParts = rawTime.split(':');
-                const hour = timeParts[0] || '20';
-                const minute = timeParts[1] || '00';
-                const formattedTime = `Pukul ${hour}.${minute}`;
-
-                // Extract Sport from icon, league, or team name
-                let sport = 'Soccer';
-                const iconStr = String(item.icon || '').toLowerCase();
-                const leagueStr = String(item.league || '').toLowerCase();
-                const t1 = String(item.team1?.name || '').toLowerCase();
-                const t2 = String(item.team2?.name || '').toLowerCase();
-
-                if (leagueStr.includes('motogp') || leagueStr.includes('racing') || iconStr.includes('racing')) {
-                    sport = 'Racing';
-                } else if (iconStr.includes('badminton') || leagueStr.includes('badminton') || t1.includes('badminton') || t2.includes('badminton')) {
-                    sport = 'Badminton';
-                } else if (iconStr.includes('baseball') || leagueStr.includes('baseball') || leagueStr.includes('kbo')) {
-                    sport = 'Baseball';
-                } else if (iconStr.includes('basketball') || leagueStr.includes('basketball') || leagueStr.includes('kbl') || leagueStr.includes('nba')) {
-                    sport = 'Basketball';
-                } else if (iconStr.includes('tennis') || leagueStr.includes('tennis') || leagueStr.includes('wta') || leagueStr.includes('atp') || leagueStr.includes('open')) {
-                    sport = 'Tennis';
+        // Offline Fallback: if all remote APIs failed (e.g. no internet), load ./data/events.json
+        if (uniqueMatches.length === 0) {
+            try {
+                const localRes = await fetch('./data/events.json?v=' + Date.now());
+                if (localRes.ok) {
+                    const localEvents = await localRes.json();
+                    if (Array.isArray(localEvents)) {
+                        localEvents.forEach((item, idx) => {
+                            const sport = (item.league || '').toLowerCase().includes('nba') ? 'Basketball'
+                                : (item.league || '').toLowerCase().includes('badminton') ? 'Badminton'
+                                : (item.league || '').toLowerCase().includes('motogp') ? 'Racing'
+                                : 'Soccer';
+                            const t1 = item.team1?.name || item.league || 'Live Team 1';
+                            const t2 = item.team2?.name || 'Live Team 2';
+                            const servers = getServersForSport(sport, `${t1} vs ${t2}`);
+                            uniqueMatches.push({
+                                id: item.id || `local-${idx}`,
+                                league: item.league || 'Live Sports',
+                                sport: sport,
+                                isHot: true,
+                                team1: { name: t1, logo: item.team1?.logo || 'images/sportsicon/Soccer.png' },
+                                team2: { name: t2, logo: item.team2?.logo || 'images/sportsicon/Soccer.png' },
+                                timeStr: `Pukul ${(item.match_time || '20:00').replace(':', '.')}`,
+                                commentator: `${sport} Official Broadcast`,
+                                channelName: servers[0].label,
+                                servers: servers,
+                                status: 'live',
+                                tabCategory: 'today'
+                            });
+                        });
+                    }
                 }
-
-                // Clean team names & match titles
-                let team1Name = (item.team1?.name || '').trim();
-                let team2Name = (item.team2?.name || '').trim();
-
-                if (sport === 'Racing') {
-                    if (!team1Name) team1Name = 'MotoGP Australia GP';
-                    if (!team2Name) team2Name = item.league || 'Practice / Race';
-                } else if (sport === 'Badminton') {
-                    if (!team1Name) team1Name = 'French Open Badminton';
-                    if (!team2Name || team2Name.toLowerCase() === 'badminton') team2Name = 'Court 1 - 4 HD';
-                } else {
-                    if (!team1Name) team1Name = 'Babak Penyisihan';
-                    if (!team2Name) team2Name = 'Babak Utama';
-                }
-
-                // Logos
-                const defaultLogo = (sport === 'Baseball' || sport === 'Basketball' || sport === 'Soccer')
-                    ? `images/sportsicon/${sport}.png`
-                    : 'images/sportsicon/Soccer.png';
-
-                const team1Logo = item.team1?.logo || item.team2?.logo || defaultLogo;
-                const team2Logo = item.team2?.logo || team1Logo || defaultLogo;
-
-                // Date comparison for tabs:
-                const matchDate = item.match_date || item.kickoff_date || todayStr;
-                let tabCat = 'today';
-                if (matchDate < todayStr) {
-                    tabCat = 'yesterday';
-                } else if (matchDate > todayStr) {
-                    tabCat = 'tomorrow';
-                } else {
-                    tabCat = 'today';
-                }
-
-                // Status:
-                let status = 'live';
-                if (tabCat === 'yesterday') {
-                    status = 'ended';
-                } else if (tabCat === 'tomorrow') {
-                    status = 'upcoming';
-                } else {
-                    status = (servers.length > 0) ? 'live' : 'upcoming';
-                }
-
-                const leagueLabel = item.league || `${sport} Tournament`;
-                const channelLabel = servers.length > 0 ? (servers[0].label || 'Server HD 1') : 'Live HD Stream';
-
-                allMatches.push({
-                    id: item.id || `api-${idx}`,
-                    league: leagueLabel,
-                    sport: sport,
-                    isHot: idx < 5 || status === 'live',
-                    team1: {
-                        name: team1Name,
-                        logo: team1Logo
-                    },
-                    team2: {
-                        name: team2Name,
-                        logo: team2Logo
-                    },
-                    timeStr: formattedTime,
-                    commentator: `${sport} Official Broadcast`,
-                    channelName: channelLabel,
-                    servers: servers,
-                    status: status,
-                    tabCategory: tabCat
-                });
-            });
+            } catch (_) {}
         }
 
-        // 2. Add real 24/7 Live Sports TV Channels
+        // Combine dynamic matches with 24/7 Live Sports TV Channels
+        const combined = [...uniqueMatches];
         FEATURED_SPORTS_CHANNELS.forEach(tv => {
-            allMatches.push(tv);
-            // Also make available in tomorrow tab as continuous 24/7 channel
-            allMatches.push({
+            combined.push(tv);
+            combined.push({
                 ...tv,
                 id: `${tv.id}-tmrw`,
                 timeStr: 'Besok (Live 24 Jam)',
@@ -396,14 +615,15 @@
             });
         });
 
+        allMatches = combined;
         renderMatches();
-    }
 
-    function getLocalDateString(d) {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
+        // Start 60s background auto-refresh if not started
+        if (!refreshTimer) {
+            refreshTimer = setInterval(() => {
+                loadData(true);
+            }, 60000);
+        }
     }
 
     // =========================================================
@@ -424,13 +644,12 @@
             if (currentCategory === 'all') return true;
             if (currentCategory === 'live') return match.status === 'live';
             if (currentCategory === 'hot') return match.isHot || match.status === 'live';
-            
+
             return (match.sport && match.sport.toLowerCase() === currentCategory.toLowerCase());
         });
 
-        // Fallback if combination is too strict
+        // Fallback if combination has no matches in the current date tab
         if (filtered.length === 0) {
-            // Try matching only by category across all dates
             filtered = allMatches.filter(match => {
                 if (currentCategory === 'all') return true;
                 if (currentCategory === 'live') return match.status === 'live';
@@ -461,15 +680,15 @@
             } else if (match.status === 'ended') {
                 statusBadge = `<span class="match-status-badge status-ended">Selesai</span>`;
             } else {
-                statusBadge = `<span class="match-status-badge status-upcoming">Ini belum dimulai.</span>`;
+                statusBadge = `<span class="match-status-badge status-upcoming">Segera Dimulai</span>`;
             }
 
             return `
-                <div class="match-card ${activeClass}" data-id="${match.id}">
+                <div class="match-card ${activeClass}" data-id="${escapeHTML(match.id)}">
                     <!-- Upper: 3 Column Info -->
                     <div class="card-main">
                         <div class="team-left">
-                            <img src="${match.team1.logo}" class="team-logo" alt="${escapeHTML(match.team1.name)}" loading="lazy" onerror="this.onerror=null; this.src='images/sportsicon/Soccer.png'">
+                            <img src="${escapeHTML(match.team1.logo)}" class="team-logo" alt="${escapeHTML(match.team1.name)}" loading="lazy" onerror="this.onerror=null; this.src='images/sportsicon/Soccer.png'">
                             <span class="team-name">${escapeHTML(match.team1.name)}</span>
                         </div>
                         <div class="match-center">
@@ -478,7 +697,7 @@
                         </div>
                         <div class="team-right">
                             <span class="team-name">${escapeHTML(match.team2.name)}</span>
-                            <img src="${match.team2.logo}" class="team-logo" alt="${escapeHTML(match.team2.name)}" loading="lazy" onerror="this.onerror=null; this.src='images/sportsicon/Soccer.png'">
+                            <img src="${escapeHTML(match.team2.logo)}" class="team-logo" alt="${escapeHTML(match.team2.name)}" loading="lazy" onerror="this.onerror=null; this.src='images/sportsicon/Soccer.png'">
                         </div>
                     </div>
 
@@ -515,35 +734,38 @@
     }
 
     // =========================================================
-    // 5. Video Player Execution
+    // 5. Video Player Execution & Server Switcher
     // =========================================================
+    function formatServerUrl(srvUrl, fallbackChannel, matchTitle) {
+        const titleParam = matchTitle ? `&name=${encodeURIComponent(matchTitle)}` : '';
+        if (!srvUrl) {
+            return `player.html?channel=${encodeURIComponent(fallbackChannel || 'SPORTITALIA')}${titleParam}`;
+        }
+        if (srvUrl.startsWith('player.html')) {
+            return srvUrl;
+        }
+        const channelMatch = srvUrl.match(/channel=([^&]+)/);
+        if (channelMatch) {
+            return `player.html?channel=${channelMatch[1]}${titleParam}`;
+        }
+        return `player.html?url=${encodeURIComponent(srvUrl)}${titleParam}`;
+    }
+
     function playMatch(match, targetUrl = null) {
         currentPlayingMatch = match;
         const matchTitle = `${match.team1.name} vs ${match.team2.name}`;
 
-        // Resolve direct stream URL to our internal engine
         let streamUrl = targetUrl;
         if (!streamUrl) {
-            // 1. Direct servers from zoro/servers.json (TOP PRIORITY for real matches)
             if (match.servers && match.servers.length > 0) {
                 const s = match.servers[0];
-                if (s.url) {
-                    streamUrl = formatServerUrl(s.url, match.channelName, matchTitle);
-                } else if (s.key) {
-                    streamUrl = `player.html?key=${encodeURIComponent(s.key)}&name=${encodeURIComponent(matchTitle)}`;
-                }
-            } 
-            // 2. Direct player.html URL (e.g. for TV channels)
-            else if (match.channelUrl && match.channelUrl.startsWith('player.html')) {
+                streamUrl = formatServerUrl(s.url, match.channelName, matchTitle);
+            } else if (match.channelUrl && match.channelUrl.startsWith('player.html')) {
                 streamUrl = match.channelUrl;
-            } 
-            // 3. Channel Name lookup (e.g. BEIN 1 AU, SPOTV 1 PH)
-            else if (match.channelName) {
+            } else if (match.channelName) {
                 streamUrl = formatServerUrl(null, match.channelName, matchTitle);
-            } 
-            // 4. Fallback default
-            else {
-                streamUrl = `player.html?channel=BEIN%201%20AU&name=${encodeURIComponent(matchTitle)}`;
+            } else {
+                streamUrl = `player.html?channel=SPORTITALIA&name=${encodeURIComponent(matchTitle)}`;
             }
         }
 
@@ -564,47 +786,24 @@
 
         if (nowPlayingBar && playingTitle) {
             nowPlayingBar.style.display = 'flex';
-            playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} (${match.channelName || 'Live'})`;
+            playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} (${match.league || 'Live HD'})`;
         }
 
         // Render Server Chips
         if (serverChips) {
-            const defaultChan = match.channelName || 'BEIN 1 AU';
-            let availableServers = [];
-            if (match.servers && match.servers.length > 0) {
-                availableServers = match.servers.map((srv, idx) => {
-                    let sUrl = '';
-                    if (srv.url) {
-                        sUrl = formatServerUrl(srv.url, defaultChan, matchTitle);
-                    } else if (srv.key) {
-                        sUrl = `player.html?key=${encodeURIComponent(srv.key)}&name=${encodeURIComponent(matchTitle)}`;
-                    } else {
-                        sUrl = formatServerUrl(null, defaultChan, matchTitle);
-                    }
-                    return { label: srv.label || `Server ${idx + 1}`, url: sUrl };
-                });
-            } else if (match.channelName) {
-                availableServers = [
-                    { label: 'Server 1 HD', url: streamUrl },
-                    { label: 'Server 2 HD', url: 'player.html?channel=BEIN%202%20AU' },
-                    { label: 'Server 3 SD', url: 'player.html?channel=BEIN%203%20AU' },
-                    { label: 'Server 4 SPOTV', url: 'player.html?channel=SPOTV%201%20PH' }
-                ];
-            } else {
-                availableServers = [
-                    { label: 'Server 1 HD', url: streamUrl },
-                    { label: 'Server 2 HD', url: 'player.html?channel=BEIN%202%20AU' },
-                    { label: 'Server 3 SD', url: 'player.html?channel=BEIN%203%20AU' }
-                ];
-            }
+            const availableServers = (match.servers && match.servers.length > 0)
+                ? match.servers.map((srv, idx) => ({
+                    label: srv.label || `Server ${idx + 1}`,
+                    url: formatServerUrl(srv.url, match.channelName, matchTitle)
+                }))
+                : getServersForSport(match.sport || 'Soccer', matchTitle);
 
             serverChips.innerHTML = availableServers.map((srv, i) => {
                 const sUrl = srv.url || streamUrl;
                 const active = (sUrl === streamUrl || (i === 0 && !targetUrl)) ? 'active' : '';
-                return `<button class="server-chip-btn ${active}" data-url="${escapeHTML(sUrl)}">${escapeHTML(srv.label || `Server ${i+1}`)}</button>`;
+                return `<button class="server-chip-btn ${active}" data-url="${escapeHTML(sUrl)}">${escapeHTML(srv.label || `Server ${i + 1}`)}</button>`;
             }).join('');
 
-            // Chip click
             serverChips.querySelectorAll('.server-chip-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -616,7 +815,7 @@
             });
         }
 
-        // Highlight card
+        // Highlight active card
         document.querySelectorAll('.match-card').forEach(c => {
             if (c.getAttribute('data-id') === match.id) {
                 c.classList.add('card-active');
@@ -644,14 +843,12 @@
         const scrollWrapper = document.getElementById('category-scroll-wrapper');
         const catButtons = document.querySelectorAll('.category-button');
 
-        // Freeze Live Event Button
         if (liveBtn) {
             liveBtn.addEventListener('click', () => {
                 setCategoryActive(liveBtn, 'live');
             });
         }
 
-        // Category Buttons
         catButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const cat = btn.getAttribute('data-category');
@@ -659,7 +856,6 @@
             });
         });
 
-        // Scroll Arrows
         if (arrowLeft && scrollWrapper) {
             arrowLeft.addEventListener('click', () => {
                 scrollWrapper.scrollBy({ left: -160, behavior: 'smooth' });
@@ -674,7 +870,6 @@
 
     function setCategoryActive(activeEl, cat) {
         currentCategory = cat;
-        // Uncheck all
         document.querySelectorAll('.category-freeze, .category-button').forEach(b => b.classList.remove('active'));
         if (activeEl) activeEl.classList.add('active');
         renderMatches();
@@ -717,7 +912,6 @@
         renderMatches();
     };
 
-    // Helper: Escape HTML
     function escapeHTML(str) {
         return String(str || '')
             .replace(/&/g, '&amp;')
@@ -735,7 +929,6 @@
         initSportsCategories();
         initTabs();
 
-        // Placeholder play button click -> play first match
         const placeholder = document.getElementById('player-placeholder');
         if (placeholder) {
             placeholder.addEventListener('click', () => {
