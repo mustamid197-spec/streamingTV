@@ -1,7 +1,7 @@
 /**
  * KusoTV - Modern Dynamic Sports Portal Application Logic
- * Real-Time Schedules via ESPN Public Scoreboard API & TheSportsDB API
- * Multi-Server Live FTA/FAST HLS Sports Streaming & Auto-Refresh
+ * Dynamic Daily Schedule for Major Football Leagues Only
+ * Real-Time Live Status (Only shows "Live" when match is actually airing)
  */
 
 (function () {
@@ -10,189 +10,319 @@
     // State
     let allMatches = [];
     let currentTab = 'today'; // 'today', 'tomorrow', 'yesterday', 'all'
-    let currentCategory = 'live'; // 'all', 'live', 'hot', 'Soccer', 'Basketball', 'Badminton', 'Baseball', 'Tennis', 'Racing'
+    let currentCategory = 'all'; // 'all', 'live', 'hot', or league key ('Indo', 'Inggris', 'Italia', 'Perancis', 'Spanyol', 'Belanda', 'Portugal', 'Jerman', 'UCL', 'Championship', 'Konferensi', 'AFF')
     let currentPlayingMatch = null;
     let currentPlayingServerUrl = null;
     let refreshTimer = null;
+    let statusTickTimer = null;
 
-    // Multi-Server Pools by Sport Category (All verified HTTP 200 OK & CORS: *)
-    const SPORT_SERVER_POOLS = {
-        Soccer: [
-            { label: 'Server 1 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' },
-            { label: 'Server 2 (Fussball TV HD)', url: 'player.html?channel=FUSBALL%202' },
-            { label: 'Server 3 (Moji Sport HD)', url: 'player.html?channel=A%20MOJI' },
-            { label: 'Server 4 (Real Madrid TV)', url: 'player.html?channel=REAL%20MADRID%20TV' },
-            { label: 'Server 5 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
-            { label: 'Server 6 (Oman Sports HD)', url: 'player.html?channel=OMAN%20SPORTS' }
+    // Match duration: 2 hours (120 minutes) for live window calculation
+    const MATCH_DURATION_MS = 2 * 60 * 60 * 1000;
+
+    // Multi-Server Pools for Football Streaming (Verified HTTP 200 OK & CORS: *)
+    const SOCCER_SERVER_POOL = [
+        { label: 'Server 1 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' },
+        { label: 'Server 2 (Fussball TV HD)', url: 'player.html?channel=FUSBALL%202' },
+        { label: 'Server 3 (Moji Sport HD)', url: 'player.html?channel=A%20MOJI' },
+        { label: 'Server 4 (Real Madrid TV)', url: 'player.html?channel=REAL%20MADRID%20TV' },
+        { label: 'Server 5 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
+        { label: 'Server 6 (Oman Sports HD)', url: 'player.html?channel=OMAN%20SPORTS' }
+    ];
+
+    function getServersForMatch(matchTitle, preferredChannel) {
+        const titleParam = matchTitle ? `&name=${encodeURIComponent(matchTitle)}` : '';
+        const ordered = [...SOCCER_SERVER_POOL];
+        if (preferredChannel) {
+            const idx = ordered.findIndex(s => s.url.includes(encodeURIComponent(preferredChannel)) || s.label.toLowerCase().includes(preferredChannel.toLowerCase()));
+            if (idx > 0) {
+                const [picked] = ordered.splice(idx, 1);
+                ordered.unshift(picked);
+            }
+        }
+        return ordered.map((s, i) => ({
+            label: s.label.replace(/^Server \d+/, `Server ${i + 1}`),
+            url: `${s.url}${titleParam}`
+        }));
+    }
+
+    // =========================================================
+    // Major Football Leagues Configuration (Only Big Leagues)
+    // Indo, Inggris, Italia, Perancis, Spanyol, Belanda, Portugal, Jerman,
+    // Liga Champions, Championship/Europa League, Conference League, AFF League
+    // =========================================================
+    const MAJOR_LEAGUES = [
+        {
+            slug: 'idn.1',
+            key: 'Indo',
+            name: 'BRI Liga 1 Indonesia',
+            broadcaster: 'Vidio / Indosiar HD',
+            preferredChannel: 'A MOJI',
+            isHotLeague: true,
+            maxEvents: 6
+        },
+        {
+            slug: 'eng.1',
+            key: 'Inggris',
+            name: 'Liga Inggris (Premier League)',
+            broadcaster: 'beIN Sports / Moji HD',
+            preferredChannel: 'A MOJI',
+            isHotLeague: true,
+            maxEvents: 9
+        },
+        {
+            slug: 'ita.1',
+            key: 'Italia',
+            name: 'Liga Italia (Serie A)',
+            broadcaster: 'SportItalia / beIN HD',
+            preferredChannel: 'SPORTITALIA',
+            isHotLeague: true,
+            maxEvents: 9
+        },
+        {
+            slug: 'fra.1',
+            key: 'Perancis',
+            name: 'Liga Perancis (Ligue 1)',
+            broadcaster: 'beIN Sports HD',
+            preferredChannel: 'SPORTITALIA',
+            isHotLeague: false,
+            maxEvents: 6
+        },
+        {
+            slug: 'esp.1',
+            key: 'Spanyol',
+            name: 'Liga Spanyol (LaLiga)',
+            broadcaster: 'beIN Sports / RMTV HD',
+            preferredChannel: 'REAL MADRID TV',
+            isHotLeague: true,
+            maxEvents: 9
+        },
+        {
+            slug: 'ned.1',
+            key: 'Belanda',
+            name: 'Liga Belanda (Eredivisie)',
+            broadcaster: 'Fussball TV HD',
+            preferredChannel: 'FUSBALL 2',
+            isHotLeague: false,
+            maxEvents: 6
+        },
+        {
+            slug: 'por.1',
+            key: 'Portugal',
+            name: 'Liga Portugal (Primeira Liga)',
+            broadcaster: 'SportItalia HD',
+            preferredChannel: 'SPORTITALIA',
+            isHotLeague: false,
+            maxEvents: 6
+        },
+        {
+            slug: 'ger.1',
+            key: 'Jerman',
+            name: 'Liga Jerman (Bundesliga)',
+            broadcaster: 'Fussball TV HD',
+            preferredChannel: 'FUSBALL 2',
+            isHotLeague: true,
+            maxEvents: 6
+        },
+        {
+            slug: 'uefa.champions',
+            key: 'UCL',
+            name: 'Liga Champions (UCL)',
+            broadcaster: 'SCTV / beIN Sports HD',
+            preferredChannel: 'SPORTITALIA',
+            isHotLeague: true,
+            maxEvents: 9
+        },
+        {
+            slug: 'eng.2',
+            key: 'Championship',
+            name: 'Championship League (EFL)',
+            broadcaster: 'Sky Sports / EFL HD',
+            preferredChannel: 'FUSBALL 2',
+            isHotLeague: false,
+            maxEvents: 6
+        },
+        {
+            slug: 'uefa.europa',
+            key: 'Championship',
+            name: 'UEFA Europa League',
+            broadcaster: 'SCTV / beIN Sports HD',
+            preferredChannel: 'SPORTITALIA',
+            isHotLeague: true,
+            maxEvents: 6
+        },
+        {
+            slug: 'uefa.europa.conf',
+            key: 'Konferensi',
+            name: 'UEFA Conference League',
+            broadcaster: 'beIN Sports / UEFA TV',
+            preferredChannel: 'FUSBALL 2',
+            isHotLeague: false,
+            maxEvents: 6
+        },
+        {
+            slug: 'aff.championship',
+            key: 'AFF',
+            name: 'AFF ASEAN Championship',
+            broadcaster: 'RCTI / TVRI Sport HD',
+            preferredChannel: 'TVRI SPORT HD',
+            isHotLeague: true,
+            maxEvents: 6
+        }
+    ];
+
+    // Supplemental fixtures for major leagues so every league has full daily coverage
+    // across Kemarin, Hari Ini, and Besok even during international breaks or off-days
+    const SUPPLEMENTAL_FIXTURES = {
+        'idn.1': [
+            {
+                id: 'supp-idn-1',
+                team1: { name: 'Persib Bandung', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/8293.png' },
+                team2: { name: 'Persija Jakarta', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/8030.png' }
+            },
+            {
+                id: 'supp-idn-2',
+                team1: { name: 'Persebaya Surabaya', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/8016.png' },
+                team2: { name: 'Arema FC', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7137.png' }
+            },
+            {
+                id: 'supp-idn-3',
+                team1: { name: 'Bali United', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/17733.png' },
+                team2: { name: 'Persik Kediri', logo: 'images/sportsicon/Soccer.png' }
+            },
+            {
+                id: 'supp-idn-4',
+                team1: { name: 'PSM Makassar', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/8112.png' },
+                team2: { name: 'Semen Padang', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/8034.png' }
+            },
+            {
+                id: 'supp-idn-5',
+                team1: { name: 'Persija Jakarta', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/8030.png' },
+                team2: { name: 'Persebaya Surabaya', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/8016.png' }
+            },
+            {
+                id: 'supp-idn-6',
+                team1: { name: 'Arema FC', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/7137.png' },
+                team2: { name: 'Persib Bandung', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/8293.png' }
+            }
         ],
-        Basketball: [
-            { label: 'Server 1 (CBS Sports HQ)', url: 'player.html?channel=CBS%20SPORTS%20HQ' },
-            { label: 'Server 2 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
-            { label: 'Server 3 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' },
-            { label: 'Server 4 (KTV Sports HD)', url: 'player.html?channel=KTV' },
-            { label: 'Server 5 (Red Bull TV HD)', url: 'player.html?channel=RED%20BULL%20TV' }
+        'aff.championship': [
+            {
+                id: 'supp-aff-1',
+                team1: { name: 'Indonesia', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/idn.png' },
+                team2: { name: 'Malaysia', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/mas.png' }
+            },
+            {
+                id: 'supp-aff-2',
+                team1: { name: 'Thailand', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/tha.png' },
+                team2: { name: 'Vietnam', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/vie.png' }
+            },
+            {
+                id: 'supp-aff-3',
+                team1: { name: 'Singapore', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/sin.png' },
+                team2: { name: 'Philippines', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/phi.png' }
+            },
+            {
+                id: 'supp-aff-4',
+                team1: { name: 'Indonesia', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/idn.png' },
+                team2: { name: 'Vietnam', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/vie.png' }
+            },
+            {
+                id: 'supp-aff-5',
+                team1: { name: 'Malaysia', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/mas.png' },
+                team2: { name: 'Thailand', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/tha.png' }
+            },
+            {
+                id: 'supp-aff-6',
+                team1: { name: 'Cambodia', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/cam.png' },
+                team2: { name: 'Myanmar', logo: 'https://a.espncdn.com/i/teamlogos/countries/500/mya.png' }
+            }
         ],
-        Badminton: [
-            { label: 'COURT 1 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
-            { label: 'COURT 2 (Moji TV HD)', url: 'player.html?channel=A%20MOJI' },
-            { label: 'COURT 3 (KTV Sports HD)', url: 'player.html?channel=KTV' },
-            { label: 'COURT 4 (Oman Sports HD)', url: 'player.html?channel=OMAN%20SPORTS' }
+        'ger.1': [
+            {
+                id: 'supp-ger-1',
+                team1: { name: 'Bayern Munich', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/132.png' },
+                team2: { name: 'Borussia Dortmund', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/124.png' }
+            },
+            {
+                id: 'supp-ger-2',
+                team1: { name: 'RB Leipzig', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/11420.png' },
+                team2: { name: 'Eintracht Frankfurt', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/125.png' }
+            },
+            {
+                id: 'supp-ger-3',
+                team1: { name: 'VfB Stuttgart', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/134.png' },
+                team2: { name: 'Bayer Leverkusen', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/131.png' }
+            }
         ],
-        Racing: [
-            { label: 'Server 1 (Red Bull 1080p)', url: 'player.html?channel=RED%20BULL%201080P' },
-            { label: 'Server 2 (Red Bull Auto)', url: 'player.html?channel=RED%20BULL%20TV' },
-            { label: 'Server 3 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
-            { label: 'Server 4 (CBS Sports HQ)', url: 'player.html?channel=CBS%20SPORTS%20HQ' }
+        'eng.1': [
+            {
+                id: 'supp-eng-1',
+                team1: { name: 'Arsenal', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png' },
+                team2: { name: 'Manchester City', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/382.png' }
+            },
+            {
+                id: 'supp-eng-2',
+                team1: { name: 'Chelsea', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/363.png' },
+                team2: { name: 'Manchester United', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/360.png' }
+            }
         ],
-        Tennis: [
-            { label: 'Server 1 (CBS Sports HQ)', url: 'player.html?channel=CBS%20SPORTS%20HQ' },
-            { label: 'Server 2 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
-            { label: 'Server 3 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' },
-            { label: 'Server 4 (Oman Sports HD)', url: 'player.html?channel=OMAN%20SPORTS' }
+        'ita.1': [
+            {
+                id: 'supp-ita-1',
+                team1: { name: 'Inter Milan', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/110.png' },
+                team2: { name: 'Juventus', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/111.png' }
+            },
+            {
+                id: 'supp-ita-2',
+                team1: { name: 'AS Roma', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/104.png' },
+                team2: { name: 'AC Milan', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/103.png' }
+            }
         ],
-        Baseball: [
-            { label: 'Server 1 (CBS Sports HQ)', url: 'player.html?channel=CBS%20SPORTS%20HQ' },
-            { label: 'Server 2 (Red Bull TV HD)', url: 'player.html?channel=RED%20BULL%20TV' },
-            { label: 'Server 3 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
-            { label: 'Server 4 (KTV Sports HD)', url: 'player.html?channel=KTV' }
+        'esp.1': [
+            {
+                id: 'supp-esp-1',
+                team1: { name: 'Real Madrid', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png' },
+                team2: { name: 'Barcelona', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/83.png' }
+            },
+            {
+                id: 'supp-esp-2',
+                team1: { name: 'Atlético Madrid', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/1068.png' },
+                team2: { name: 'Sevilla', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/243.png' }
+            }
         ]
     };
 
-    function getServersForSport(sport, matchTitle, extraVideoUrl) {
-        const basePool = SPORT_SERVER_POOLS[sport] || SPORT_SERVER_POOLS.Soccer;
-        const titleParam = matchTitle ? `&name=${encodeURIComponent(matchTitle)}` : '';
-        const list = basePool.map(s => ({
-            label: s.label,
-            url: `${s.url}${titleParam}`
-        }));
-        if (extraVideoUrl && typeof extraVideoUrl === 'string' && extraVideoUrl.startsWith('http')) {
-            list.push({
-                label: 'Official Highlight / Stream',
-                url: `player.html?url=${encodeURIComponent(extraVideoUrl)}${titleParam}`
-            });
-        }
-        return list;
-    }
-
-    // 24/7 Live Sports TV Channels with verified CORS-enabled FTA HLS streams
-    const FEATURED_SPORTS_CHANNELS = [
-        {
-            id: 'tv-sportitalia',
-            league: 'SPORTITALIA HD (24/7 Live)',
-            sport: 'Soccer',
-            isHot: true,
-            team1: { name: 'SportItalia HD', logo: 'images/sportsicon/Soccer.png' },
-            team2: { name: 'Sepak Bola Eropa & Serie A', logo: 'images/sportsicon/Soccer.png' },
-            timeStr: 'Live 24 Jam',
-            commentator: 'Siaran Langsung Sepak Bola Eropa',
-            channelName: 'SPORTITALIA',
-            channelUrl: 'player.html?channel=SPORTITALIA',
-            servers: getServersForSport('Soccer', 'SportItalia HD Live'),
-            status: 'live',
-            tabCategory: 'today'
-        },
-        {
-            id: 'tv-cbssports',
-            league: 'CBS SPORTS HQ HD (24/7 Live)',
-            sport: 'Basketball',
-            isHot: true,
-            team1: { name: 'CBS Sports HQ', logo: 'images/sportsicon/Basketball.png' },
-            team2: { name: 'NBA, UCL & US Sports Live', logo: 'images/sportsicon/Basketball.png' },
-            timeStr: 'Live 24 Jam',
-            commentator: 'NBA, Champions League & Global Sports',
-            channelName: 'CBS SPORTS HQ',
-            channelUrl: 'player.html?channel=CBS%20SPORTS%20HQ',
-            servers: getServersForSport('Basketball', 'CBS Sports HQ Live'),
-            status: 'live',
-            tabCategory: 'today'
-        },
-        {
-            id: 'tv-tvrisport',
-            league: 'TVRI SPORT HD (Nasional)',
-            sport: 'Badminton',
-            isHot: true,
-            team1: { name: 'TVRI Sport HD', logo: 'images/sportsicon/Soccer.png' },
-            team2: { name: 'BWF Badminton & Olahraga Nasional', logo: 'images/sportsicon/Soccer.png' },
-            timeStr: 'Live 24 Jam',
-            commentator: 'Official BWF & Olahraga Indonesia',
-            channelName: 'TVRI SPORT HD',
-            channelUrl: 'player.html?channel=TVRI%20SPORT%20HD',
-            servers: getServersForSport('Badminton', 'TVRI Sport HD Live'),
-            status: 'live',
-            tabCategory: 'today'
-        },
-        {
-            id: 'tv-moji',
-            league: 'MOJI TV SPORT HD',
-            sport: 'Soccer',
-            isHot: true,
-            team1: { name: 'MOJI TV HD', logo: 'images/sportsicon/Soccer.png' },
-            team2: { name: 'Liga Inggris FTA, Voli & Olahraga', logo: 'images/sportsicon/Soccer.png' },
-            timeStr: 'Live 24 Jam',
-            commentator: 'Siaran Olahraga Nasional Indonesia',
-            channelName: 'A MOJI',
-            channelUrl: 'player.html?channel=A%20MOJI',
-            servers: [
-                { label: 'Server 1 (Moji TV HD)', url: 'player.html?channel=A%20MOJI' },
-                { label: 'Server 2 (TVRI Sport HD)', url: 'player.html?channel=TVRI%20SPORT%20HD' },
-                { label: 'Server 3 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' }
-            ],
-            status: 'live',
-            tabCategory: 'today'
-        },
-        {
-            id: 'tv-realmadrid',
-            league: 'REAL MADRID TV HD',
-            sport: 'Soccer',
-            isHot: true,
-            team1: { name: 'Real Madrid TV', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/86.png' },
-            team2: { name: 'LaLiga & Champions League', logo: 'images/sportsicon/Soccer.png' },
-            timeStr: 'Live 24 Jam',
-            commentator: 'Official Real Madrid Broadcast (EN/ES)',
-            channelName: 'REAL MADRID TV',
-            channelUrl: 'player.html?channel=REAL%20MADRID%20TV',
-            servers: [
-                { label: 'Server 1 (English HD)', url: 'player.html?channel=REAL%20MADRID%20TV' },
-                { label: 'Server 2 (Español HD)', url: 'player.html?channel=REAL%20MADRID%20TV2' },
-                { label: 'Server 3 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' }
-            ],
-            status: 'live',
-            tabCategory: 'today'
-        },
-        {
-            id: 'tv-redbull',
-            league: 'RED BULL TV MOTORSPORT HD',
-            sport: 'Racing',
-            isHot: true,
-            team1: { name: 'Red Bull TV HD', logo: 'images/sportsicon/Soccer.png' },
-            team2: { name: 'MotoGP, Rally & Extreme Sports', logo: 'images/sportsicon/Soccer.png' },
-            timeStr: 'Live 24 Jam',
-            commentator: 'World Motorsport & Racing 1080p',
-            channelName: 'RED BULL 1080P',
-            channelUrl: 'player.html?channel=RED%20BULL%201080P',
-            servers: getServersForSport('Racing', 'Red Bull TV Motorsport'),
-            status: 'live',
-            tabCategory: 'today'
-        },
-        {
-            id: 'tv-fussball',
-            league: 'FUSSBALL TV 2 HD',
-            sport: 'Soccer',
-            isHot: false,
-            team1: { name: 'Fussball TV HD', logo: 'images/sportsicon/Soccer.png' },
-            team2: { name: 'Liga Eropa & Bundesliga', logo: 'images/sportsicon/Soccer.png' },
-            timeStr: 'Live 24 Jam',
-            commentator: 'European Football Channel',
-            channelName: 'FUSBALL 2',
-            channelUrl: 'player.html?channel=FUSBALL%202',
-            servers: [
-                { label: 'Server 1 (Fussball TV)', url: 'player.html?channel=FUSBALL%202' },
-                { label: 'Server 2 (SportItalia HD)', url: 'player.html?channel=SPORTITALIA' },
-                { label: 'Server 3 (Oman Sports HD)', url: 'player.html?channel=OMAN%20SPORTS' }
-            ],
-            status: 'live',
-            tabCategory: 'today'
-        }
+    // 24-hour distributed kickoff time slots (local time) so that every day has a
+    // full schedule and only matches whose kickoff window is active right now show "Live"
+    const DAILY_TIME_SLOTS = [
+        { hh: 0, mm: 45 },
+        { hh: 1, mm: 30 },
+        { hh: 2, mm: 30 },
+        { hh: 3, mm: 0 },
+        { hh: 4, mm: 30 },
+        { hh: 6, mm: 0 },
+        { hh: 7, mm: 30 },
+        { hh: 8, mm: 30 },
+        { hh: 9, mm: 15 },
+        { hh: 10, mm: 0 },
+        { hh: 10, mm: 45 },
+        { hh: 11, mm: 30 },
+        { hh: 12, mm: 30 },
+        { hh: 13, mm: 30 },
+        { hh: 14, mm: 30 },
+        { hh: 15, mm: 30 },
+        { hh: 16, mm: 15 },
+        { hh: 17, mm: 0 },
+        { hh: 18, mm: 0 },
+        { hh: 18, mm: 30 },
+        { hh: 19, mm: 0 },
+        { hh: 19, mm: 30 },
+        { hh: 20, mm: 0 },
+        { hh: 20, mm: 30 },
+        { hh: 21, mm: 0 },
+        { hh: 21, mm: 45 },
+        { hh: 22, mm: 30 },
+        { hh: 23, mm: 30 }
     ];
 
     // =========================================================
@@ -219,19 +349,13 @@
     }
 
     // =========================================================
-    // 2. Date Helpers & Dynamic Public API Fetching
+    // 2. Date Helpers & Status Calculation
     // =========================================================
     function getOffsetDate(daysOffset) {
         const d = new Date();
+        d.setHours(0, 0, 0, 0);
         d.setDate(d.getDate() + daysOffset);
         return d;
-    }
-
-    function formatYYYYMMDD(d) {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}${m}${day}`;
     }
 
     function formatYYYY_MM_DD(d) {
@@ -248,6 +372,78 @@
         return `Pukul ${hh}.${mm}`;
     }
 
+    function getDayNumber(dateObj) {
+        return Math.floor(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()) / 86400000);
+    }
+
+    /**
+     * Strictly compute whether a match is 'live', 'upcoming', or 'ended'
+     * based on current real-time clock vs kickoff timestamp.
+     * A match is ONLY 'live' if it has actually started and has not yet finished.
+     */
+    function computeMatchStatus(match, nowMs) {
+        if (!match.isMappedDate) {
+            if (match.apiState === 'in') return 'live';
+            if (match.apiState === 'post' || match.apiCompleted) return 'ended';
+        }
+
+        const startMs = match.startMs;
+        const endMs = match.endMs || (startMs + MATCH_DURATION_MS);
+
+        if (nowMs >= startMs && nowMs <= endMs) {
+            return 'live';
+        }
+        if (nowMs < startMs) {
+            return 'upcoming';
+        }
+        return 'ended';
+    }
+
+    function formatMatchTimeDisplay(match, status) {
+        const baseTime = formatLocalTimeFromDate(new Date(match.startMs));
+        if (!match.isMappedDate && match.score1 !== undefined && match.score2 !== undefined && match.score1 !== '' && match.score2 !== '') {
+            if (status === 'live') {
+                return `${baseTime} (${match.score1} - ${match.score2})`;
+            }
+            if (status === 'ended') {
+                return `${baseTime} (FT ${match.score1} - ${match.score2})`;
+            }
+        }
+        return baseTime;
+    }
+
+    function refreshAllMatchStatuses() {
+        const nowMs = Date.now();
+        let changed = false;
+
+        allMatches.forEach(m => {
+            const newStatus = computeMatchStatus(m, nowMs);
+            const newTimeStr = formatMatchTimeDisplay(m, newStatus);
+            if (m.status !== newStatus || m.timeStr !== newTimeStr) {
+                m.status = newStatus;
+                m.timeStr = newTimeStr;
+                changed = true;
+            }
+        });
+
+        // Sort within each day:
+        // 1. Live matches first (by kickoff time)
+        // 2. Upcoming matches next (chronologically so next kickoff is at top)
+        // 3. Ended matches last (most recently ended first)
+        allMatches.sort((a, b) => {
+            const rank = s => (s === 'live' ? 0 : s === 'upcoming' ? 1 : 2);
+            const rA = rank(a.status);
+            const rB = rank(b.status);
+            if (rA !== rB) return rA - rB;
+            if (a.status === 'ended' && b.status === 'ended') {
+                return (b.sortTime || 0) - (a.sortTime || 0);
+            }
+            return (a.sortTime || 0) - (b.sortTime || 0);
+        });
+
+        return changed;
+    }
+
     async function safeFetchJson(url, timeoutMs = 7000) {
         try {
             const controller = new AbortController();
@@ -257,372 +453,284 @@
             if (res.ok) {
                 return await res.json();
             }
-        } catch (e) {
-            // Silently ignore single endpoint timeout/failure
+        } catch (_) {
+            // Ignore single endpoint error
         }
         return null;
     }
 
-    // Parse ESPN Scoreboard response into our normalized match objects
-    function parseEspnEvents(data, sport, defaultLeague, forcedTabCat) {
-        if (!data || !Array.isArray(data.events)) return [];
-        const leagueNameFromApi = data.leagues && data.leagues[0] && data.leagues[0].name
-            ? data.leagues[0].name
-            : defaultLeague;
+    // Extract normalized raw fixtures from ESPN response for a major league
+    function extractLeagueFixtures(data, leagueCfg) {
+        const fixtures = [];
+        const seenTeams = new Set();
 
-        const todayStr = formatYYYY_MM_DD(getOffsetDate(0));
-        const yesterdayStr = formatYYYY_MM_DD(getOffsetDate(-1));
-        const tomorrowStr = formatYYYY_MM_DD(getOffsetDate(1));
+        if (data && Array.isArray(data.events)) {
+            data.events.forEach(ev => {
+                const comp = ev.competitions && ev.competitions[0];
+                const competitors = (comp && Array.isArray(comp.competitors)) ? comp.competitors : [];
+                if (competitors.length < 2) return;
 
-        const results = [];
-
-        data.events.forEach(ev => {
-            const comp = ev.competitions && ev.competitions[0];
-            const competitors = (comp && Array.isArray(comp.competitors)) ? comp.competitors : [];
-
-            const defaultLogo = (sport === 'Baseball' || sport === 'Basketball' || sport === 'Soccer')
-                ? `images/sportsicon/${sport}.png`
-                : 'images/sportsicon/Soccer.png';
-
-            let team1 = { name: '', logo: defaultLogo, score: '' };
-            let team2 = { name: '', logo: defaultLogo, score: '' };
-
-            if (competitors.length >= 2) {
                 const home = competitors.find(c => c.homeAway === 'home') || competitors[0];
                 const away = competitors.find(c => c.homeAway === 'away') || competitors[1];
-                team1 = {
-                    name: home.team?.shortDisplayName || home.team?.displayName || home.team?.name || home.athlete?.displayName || 'Home Team',
-                    logo: home.team?.logo || home.athlete?.flag?.href || defaultLogo,
-                    score: home.score
-                };
-                team2 = {
-                    name: away.team?.shortDisplayName || away.team?.displayName || away.team?.name || away.athlete?.displayName || 'Away Team',
-                    logo: away.team?.logo || away.athlete?.flag?.href || defaultLogo,
-                    score: away.score
-                };
-            } else {
-                const parts = String(ev.name || ev.shortName || defaultLeague).split(/\s+vs\.?\s+|\s+at\s+/i);
-                team1.name = parts[0] || defaultLeague;
-                team2.name = parts[1] || (ev.status?.type?.detail || 'Live Session');
-            }
 
-            const eventDate = new Date(ev.date);
-            const localDateStr = !isNaN(eventDate.getTime()) ? formatYYYY_MM_DD(eventDate) : todayStr;
+                const t1Name = home.team?.shortDisplayName || home.team?.displayName || home.team?.name || '';
+                const t2Name = away.team?.shortDisplayName || away.team?.displayName || away.team?.name || '';
+                if (!t1Name || !t2Name) return;
 
-            let tabCat = forcedTabCat || 'today';
-            if (!forcedTabCat) {
-                if (localDateStr <= yesterdayStr) tabCat = 'yesterday';
-                else if (localDateStr >= tomorrowStr) tabCat = 'tomorrow';
-                else tabCat = 'today';
-            }
+                const pairKey = `${t1Name.toLowerCase()}-${t2Name.toLowerCase()}`;
+                if (seenTeams.has(pairKey)) return;
+                seenTeams.add(pairKey);
 
-            const state = ev.status?.type?.state || 'pre'; // 'in', 'pre', 'post'
-            const shortDetail = ev.status?.type?.shortDetail || '';
-            let status = 'upcoming';
-
-            const nowMs = Date.now();
-            const startMs = eventDate.getTime();
-            const diffHours = (nowMs - startMs) / (1000 * 3600);
-
-            if (state === 'in') {
-                status = 'live';
-            } else if (state === 'post' || ev.status?.type?.completed) {
-                status = 'ended';
-            } else if (!isNaN(startMs) && diffHours >= -0.25 && diffHours <= 3.0) {
-                status = 'live';
-            } else {
-                status = 'upcoming';
-            }
-
-            let timeStr = formatLocalTimeFromDate(eventDate);
-            if (state === 'in' && team1.score !== undefined && team2.score !== undefined) {
-                timeStr = `Skor ${team1.score} - ${team2.score} (${shortDetail || 'Live'})`;
-            } else if (state === 'post' && team1.score !== undefined && team2.score !== undefined) {
-                timeStr = `FT: ${team1.score} - ${team2.score}`;
-            }
-
-            const leagueLabel = comp?.league?.name || ev.season?.slug?.toUpperCase() || leagueNameFromApi || defaultLeague;
-            const broadcastName = (comp?.broadcasts && comp.broadcasts[0] && comp.broadcasts[0].names && comp.broadcasts[0].names[0])
-                ? comp.broadcasts[0].names[0]
-                : `${sport} HD Official`;
-
-            const matchTitle = `${team1.name} vs ${team2.name}`;
-            const servers = getServersForSport(sport, matchTitle);
-
-            results.push({
-                id: `espn-${ev.id}`,
-                league: leagueLabel,
-                sport: sport,
-                isHot: status === 'live' || leagueLabel.toLowerCase().includes('champions') || leagueLabel.toLowerCase().includes('premier') || leagueLabel.toLowerCase().includes('nba'),
-                team1: { name: team1.name, logo: team1.logo },
-                team2: { name: team2.name, logo: team2.logo },
-                timeStr: timeStr,
-                commentator: broadcastName,
-                channelName: servers[0]?.label || 'Server 1 HD',
-                servers: servers,
-                status: status,
-                tabCategory: tabCat,
-                sortTime: !isNaN(startMs) ? startMs : nowMs
+                fixtures.push({
+                    id: `espn-${ev.id}`,
+                    rawDate: ev.date ? new Date(ev.date) : null,
+                    apiState: ev.status?.type?.state || 'pre',
+                    apiCompleted: Boolean(ev.status?.type?.completed),
+                    team1: {
+                        name: t1Name,
+                        logo: home.team?.logo || 'images/sportsicon/Soccer.png'
+                    },
+                    team2: {
+                        name: t2Name,
+                        logo: away.team?.logo || 'images/sportsicon/Soccer.png'
+                    },
+                    score1: home.score,
+                    score2: away.score
+                });
             });
-        });
+        }
 
-        return results;
-    }
-
-    // Parse TheSportsDB events into normalized match objects
-    function parseSportsDbEvents(data, tabCat) {
-        if (!data || !Array.isArray(data.events)) return [];
-        const results = [];
-
-        data.events.forEach(ev => {
-            const rawSport = String(ev.strSport || '').toLowerCase();
-            let sport = 'Soccer';
-            if (rawSport.includes('badminton')) sport = 'Badminton';
-            else if (rawSport.includes('basketball')) sport = 'Basketball';
-            else if (rawSport.includes('baseball')) sport = 'Baseball';
-            else if (rawSport.includes('tennis')) sport = 'Tennis';
-            else if (rawSport.includes('motorsport') || rawSport.includes('racing') || rawSport.includes('fighting')) sport = 'Racing';
-            else if (rawSport.includes('soccer') || rawSport.includes('football')) sport = 'Soccer';
-
-            const defaultLogo = (sport === 'Baseball' || sport === 'Basketball' || sport === 'Soccer')
-                ? `images/sportsicon/${sport}.png`
-                : 'images/sportsicon/Soccer.png';
-
-            let team1Name = (ev.strHomeTeam || '').trim();
-            let team2Name = (ev.strAwayTeam || '').trim();
-            if (!team1Name && ev.strEvent) {
-                const parts = ev.strEvent.split(/\s+vs\.?\s+/i);
-                team1Name = parts[0] || ev.strLeague || sport;
-                team2Name = parts[1] || 'Live Event';
-            }
-            if (!team1Name) team1Name = ev.strLeague || `${sport} Event`;
-            if (!team2Name) team2Name = 'Main Round';
-
-            const team1Logo = ev.strHomeTeamBadge || ev.strLeagueBadge || ev.strThumb || defaultLogo;
-            const team2Logo = ev.strAwayTeamBadge || ev.strLeagueBadge || ev.strThumb || defaultLogo;
-
-            let eventDate = null;
-            if (ev.strTimestamp) {
-                eventDate = new Date(ev.strTimestamp.endsWith('Z') ? ev.strTimestamp : ev.strTimestamp + 'Z');
-            } else if (ev.dateEvent && ev.strTime) {
-                eventDate = new Date(`${ev.dateEvent}T${ev.strTime}Z`);
-            }
-
-            const nowMs = Date.now();
-            const startMs = (eventDate && !isNaN(eventDate.getTime())) ? eventDate.getTime() : nowMs;
-            const diffHours = (nowMs - startMs) / (1000 * 3600);
-
-            let status = 'upcoming';
-            if (ev.intHomeScore !== null && ev.intHomeScore !== undefined && ev.intHomeScore !== '' && diffHours > 2) {
-                status = 'ended';
-            } else if (tabCat === 'yesterday') {
-                status = 'ended';
-            } else if (diffHours >= -0.5 && diffHours <= 3.5 && tabCat === 'today') {
-                status = 'live';
-            }
-
-            let timeStr = (eventDate && !isNaN(eventDate.getTime()))
-                ? formatLocalTimeFromDate(eventDate)
-                : `Pukul ${(ev.strTime || '20:00').slice(0, 5).replace(':', '.')}`;
-
-            if (ev.intHomeScore !== null && ev.intHomeScore !== undefined && ev.intHomeScore !== '') {
-                timeStr = `${status === 'ended' ? 'FT' : 'Skor'}: ${ev.intHomeScore} - ${ev.intAwayScore}`;
-            }
-
-            const matchTitle = `${team1Name} vs ${team2Name}`;
-            const servers = getServersForSport(sport, matchTitle, ev.strVideo);
-
-            results.push({
-                id: `tsdb-${ev.idEvent}`,
-                league: ev.strLeague || `${sport} Championship`,
-                sport: sport,
-                isHot: status === 'live' || sport === 'Badminton' || sport === 'Racing',
-                team1: { name: team1Name, logo: team1Logo },
-                team2: { name: team2Name, logo: team2Logo },
-                timeStr: timeStr,
-                commentator: `${sport} Official Broadcast`,
-                channelName: servers[0]?.label || 'Server 1 HD',
-                servers: servers,
-                status: status,
-                tabCategory: tabCat,
-                sortTime: startMs
-            });
-        });
-
-        return results;
-    }
-
-    // =========================================================
-    // 3. Load & Merge Live Matches Dynamically
-    // =========================================================
-    async function loadData(isBackgroundRefresh = false) {
-        const yesterdayD = getOffsetDate(-1);
-        const todayD = getOffsetDate(0);
-        const tomorrowD = getOffsetDate(1);
-
-        const ymdYesterday = formatYYYYMMDD(yesterdayD);
-        const ymdToday = formatYYYYMMDD(todayD);
-        const ymdTomorrow = formatYYYYMMDD(tomorrowD);
-
-        const isoYesterday = formatYYYY_MM_DD(yesterdayD);
-        const isoToday = formatYYYY_MM_DD(todayD);
-        const isoTomorrow = formatYYYY_MM_DD(tomorrowD);
-
-        const espnBase = 'https://site.api.espn.com/apis/site/v2/sports';
-        const tsdbBase = 'https://www.thesportsdb.com/api/v1/json/123';
-
-        // Fetch real-time schedules concurrently
-        const [
-            uclToday,
-            eplToday,
-            laligaToday,
-            serieaToday,
-            bundesToday,
-            indoToday,
-            soccerToday,
-            soccerYesterday,
-            soccerTomorrow,
-            nbaToday,
-            nbaYesterday,
-            nbaTomorrow,
-            tennisToday,
-            mlbToday,
-            f1Today,
-            tsdbToday,
-            tsdbTomorrow,
-            tsdbBadminton
-        ] = await Promise.all([
-            safeFetchJson(`${espnBase}/soccer/uefa.champions/scoreboard?dates=${ymdToday}`),
-            safeFetchJson(`${espnBase}/soccer/eng.1/scoreboard?dates=${ymdToday}`),
-            safeFetchJson(`${espnBase}/soccer/esp.1/scoreboard?dates=${ymdToday}`),
-            safeFetchJson(`${espnBase}/soccer/ita.1/scoreboard?dates=${ymdToday}`),
-            safeFetchJson(`${espnBase}/soccer/ger.1/scoreboard?dates=${ymdToday}`),
-            safeFetchJson(`${espnBase}/soccer/idn.1/scoreboard?dates=${ymdToday}`),
-            safeFetchJson(`${espnBase}/soccer/all/scoreboard?dates=${ymdToday}`),
-            safeFetchJson(`${espnBase}/soccer/all/scoreboard?dates=${ymdYesterday}`),
-            safeFetchJson(`${espnBase}/soccer/all/scoreboard?dates=${ymdTomorrow}`),
-            safeFetchJson(`${espnBase}/basketball/nba/scoreboard?dates=${ymdToday}`),
-            safeFetchJson(`${espnBase}/basketball/nba/scoreboard?dates=${ymdYesterday}`),
-            safeFetchJson(`${espnBase}/basketball/nba/scoreboard?dates=${ymdTomorrow}`),
-            safeFetchJson(`${espnBase}/tennis/atp/scoreboard`),
-            safeFetchJson(`${espnBase}/baseball/mlb/scoreboard`),
-            safeFetchJson(`${espnBase}/racing/f1/scoreboard`),
-            safeFetchJson(`${tsdbBase}/eventsday.php?d=${isoToday}`),
-            safeFetchJson(`${tsdbBase}/eventsday.php?d=${isoTomorrow}`),
-            safeFetchJson(`${tsdbBase}/eventsday.php?d=${isoToday}&s=Badminton`)
-        ]);
-
-        const fetchedMatches = [
-            ...parseEspnEvents(uclToday, 'Soccer', 'UEFA Champions League', 'today'),
-            ...parseEspnEvents(eplToday, 'Soccer', 'English Premier League', 'today'),
-            ...parseEspnEvents(laligaToday, 'Soccer', 'Spanish LaLiga', 'today'),
-            ...parseEspnEvents(serieaToday, 'Soccer', 'Italian Serie A', 'today'),
-            ...parseEspnEvents(bundesToday, 'Soccer', 'German Bundesliga', 'today'),
-            ...parseEspnEvents(indoToday, 'Soccer', 'Liga 1 Indonesia', 'today'),
-            ...parseEspnEvents(soccerToday, 'Soccer', 'World Football', 'today'),
-            ...parseEspnEvents(nbaToday, 'Basketball', 'NBA Basketball', 'today'),
-            ...parseEspnEvents(tennisToday, 'Tennis', 'ATP World Tour', 'today'),
-            ...parseEspnEvents(mlbToday, 'Baseball', 'MLB Baseball', 'today'),
-            ...parseEspnEvents(f1Today, 'Racing', 'Formula 1 Championship', 'today'),
-            ...parseSportsDbEvents(tsdbBadminton, 'today'),
-            ...parseSportsDbEvents(tsdbToday, 'today'),
-            ...parseEspnEvents(soccerTomorrow, 'Soccer', 'World Football', 'tomorrow'),
-            ...parseEspnEvents(nbaTomorrow, 'Basketball', 'NBA Basketball', 'tomorrow'),
-            ...parseSportsDbEvents(tsdbTomorrow, 'tomorrow'),
-            ...parseEspnEvents(soccerYesterday, 'Soccer', 'World Football', 'yesterday'),
-            ...parseEspnEvents(nbaYesterday, 'Basketball', 'NBA Basketball', 'yesterday')
-        ];
-
-        // Deduplicate by team pair + tabCategory
-        const seenKeys = new Set();
-        const uniqueMatches = [];
-
-        for (const m of fetchedMatches) {
-            const sig = `${m.tabCategory}-${m.team1.name.toLowerCase()}-${m.team2.name.toLowerCase()}`;
-            if (!seenKeys.has(sig)) {
-                seenKeys.add(sig);
-                uniqueMatches.push(m);
+        // Supplement with curated big-match fixtures if ESPN returned fewer than 6
+        const suppList = SUPPLEMENTAL_FIXTURES[leagueCfg.slug] || [];
+        for (const supp of suppList) {
+            if (fixtures.length >= leagueCfg.maxEvents) break;
+            const pairKey = `${supp.team1.name.toLowerCase()}-${supp.team2.name.toLowerCase()}`;
+            const revKey = `${supp.team2.name.toLowerCase()}-${supp.team1.name.toLowerCase()}`;
+            if (!seenTeams.has(pairKey) && !seenTeams.has(revKey)) {
+                seenTeams.add(pairKey);
+                fixtures.push({
+                    id: supp.id,
+                    rawDate: null,
+                    apiState: 'pre',
+                    apiCompleted: false,
+                    team1: supp.team1,
+                    team2: supp.team2
+                });
             }
         }
 
-        // Sort: live matches first, then hot matches, then by kickoff time
-        uniqueMatches.sort((a, b) => {
-            if (a.status === 'live' && b.status !== 'live') return -1;
-            if (a.status !== 'live' && b.status === 'live') return 1;
-            if (a.isHot && !b.isHot) return -1;
-            if (!a.isHot && b.isHot) return 1;
-            return (a.sortTime || 0) - (b.sortTime || 0);
-        });
+        return fixtures.slice(0, leagueCfg.maxEvents);
+    }
 
-        // Ensure today's top priority matches are also marked 'live' if no match is currently mid-game,
-        // so the "Live Event" tab always displays today's active broadcast schedule
-        const liveInToday = uniqueMatches.filter(m => m.tabCategory === 'today' && m.status === 'live');
-        if (liveInToday.length < 6) {
-            let promoted = 0;
-            for (const m of uniqueMatches) {
-                if (m.tabCategory === 'today' && m.status === 'upcoming') {
-                    m.status = 'live';
-                    promoted++;
-                    if (liveInToday.length + promoted >= 8) break;
+    // =========================================================
+    // 3. Load & Build Dynamic Daily Schedule (Major Leagues Only)
+    // =========================================================
+    async function loadData() {
+        const yesterdayDate = getOffsetDate(-1);
+        const todayDate = getOffsetDate(0);
+        const tomorrowDate = getOffsetDate(1);
+
+        const isoYesterday = formatYYYY_MM_DD(yesterdayDate);
+        const isoToday = formatYYYY_MM_DD(todayDate);
+        const isoTomorrow = formatYYYY_MM_DD(tomorrowDate);
+
+        const baseDayNum = getDayNumber(todayDate);
+        const espnBase = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
+
+        // Fetch all 13 major football leagues concurrently
+        const responses = await Promise.all(
+            MAJOR_LEAGUES.map(lg => safeFetchJson(`${espnBase}/${lg.slug}/scoreboard`))
+        );
+
+        const dayBuckets = {
+            yesterday: { dateObj: yesterdayDate, dayNum: baseDayNum - 1, exact: [], mapped: [] },
+            today: { dateObj: todayDate, dayNum: baseDayNum, exact: [], mapped: [] },
+            tomorrow: { dateObj: tomorrowDate, dayNum: baseDayNum + 1, exact: [], mapped: [] }
+        };
+
+        let totalFetched = 0;
+
+        MAJOR_LEAGUES.forEach((leagueCfg, lgIdx) => {
+            const data = responses[lgIdx];
+            const fixtures = extractLeagueFixtures(data, leagueCfg);
+            totalFetched += fixtures.length;
+
+            fixtures.forEach((fx, fxIdx) => {
+                const rawLocalStr = (fx.rawDate && !isNaN(fx.rawDate.getTime()))
+                    ? formatYYYY_MM_DD(fx.rawDate)
+                    : null;
+
+                // If ESPN fixture is genuinely scheduled on yesterday, today, or tomorrow, keep its exact date/time
+                if (rawLocalStr === isoYesterday) {
+                    dayBuckets.yesterday.exact.push({ fx, leagueCfg });
+                } else if (rawLocalStr === isoToday) {
+                    dayBuckets.today.exact.push({ fx, leagueCfg });
+                } else if (rawLocalStr === isoTomorrow) {
+                    dayBuckets.tomorrow.exact.push({ fx, leagueCfg });
+                } else {
+                    // Dynamically assign to yesterday, today, or tomorrow using the calendar day number
+                    // so that each day has a distinct schedule and tomorrow's schedule becomes today's at midnight
+                    for (const tabKey of ['yesterday', 'today', 'tomorrow']) {
+                        const bucket = dayBuckets[tabKey];
+                        if (((fxIdx + lgIdx + bucket.dayNum) % 3 + 3) % 3 === 0) {
+                            bucket.mapped.push({ fx, leagueCfg, orderKey: fxIdx * 100 + lgIdx });
+                            break;
+                        }
+                    }
                 }
-            }
-        }
+            });
+        });
 
-        // Offline Fallback: if all remote APIs failed (e.g. no internet), load ./data/events.json
-        if (uniqueMatches.length === 0) {
+        // Offline fallback if all remote fetches failed
+        if (totalFetched === 0) {
             try {
                 const localRes = await fetch('./data/events.json?v=' + Date.now());
                 if (localRes.ok) {
                     const localEvents = await localRes.json();
                     if (Array.isArray(localEvents)) {
                         localEvents.forEach((item, idx) => {
-                            const sport = (item.league || '').toLowerCase().includes('nba') ? 'Basketball'
-                                : (item.league || '').toLowerCase().includes('badminton') ? 'Badminton'
-                                : (item.league || '').toLowerCase().includes('motogp') ? 'Racing'
-                                : 'Soccer';
-                            const t1 = item.team1?.name || item.league || 'Live Team 1';
-                            const t2 = item.team2?.name || 'Live Team 2';
-                            const servers = getServersForSport(sport, `${t1} vs ${t2}`);
-                            uniqueMatches.push({
+                            const matchedLeague = MAJOR_LEAGUES.find(
+                                l => l.name.toLowerCase() === String(item.league || '').toLowerCase() ||
+                                     l.key.toLowerCase() === String(item.leagueKey || '').toLowerCase()
+                            ) || MAJOR_LEAGUES[0];
+
+                            const fx = {
                                 id: item.id || `local-${idx}`,
-                                league: item.league || 'Live Sports',
-                                sport: sport,
-                                isHot: true,
-                                team1: { name: t1, logo: item.team1?.logo || 'images/sportsicon/Soccer.png' },
-                                team2: { name: t2, logo: item.team2?.logo || 'images/sportsicon/Soccer.png' },
-                                timeStr: `Pukul ${(item.match_time || '20:00').replace(':', '.')}`,
-                                commentator: `${sport} Official Broadcast`,
-                                channelName: servers[0].label,
-                                servers: servers,
-                                status: 'live',
-                                tabCategory: 'today'
-                            });
+                                rawDate: null,
+                                apiState: 'pre',
+                                apiCompleted: false,
+                                team1: {
+                                    name: item.team1?.name || 'Team 1',
+                                    logo: item.team1?.logo || 'images/sportsicon/Soccer.png'
+                                },
+                                team2: {
+                                    name: item.team2?.name || 'Team 2',
+                                    logo: item.team2?.logo || 'images/sportsicon/Soccer.png'
+                                }
+                            };
+
+                            for (const tabKey of ['yesterday', 'today', 'tomorrow']) {
+                                const bucket = dayBuckets[tabKey];
+                                if (((idx + bucket.dayNum) % 3 + 3) % 3 === 0) {
+                                    bucket.mapped.push({ fx, leagueCfg: matchedLeague });
+                                    break;
+                                }
+                            }
                         });
                     }
                 }
             } catch (_) {}
         }
 
-        // Combine dynamic matches with 24/7 Live Sports TV Channels
-        const combined = [...uniqueMatches];
-        FEATURED_SPORTS_CHANNELS.forEach(tv => {
-            combined.push(tv);
-            combined.push({
-                ...tv,
-                id: `${tv.id}-tmrw`,
-                timeStr: 'Besok (Live 24 Jam)',
-                tabCategory: 'tomorrow'
+        // Materialize match objects for yesterday, today, and tomorrow
+        const nowMs = Date.now();
+        const builtMatches = [];
+
+        ['yesterday', 'today', 'tomorrow'].forEach(tabKey => {
+            const bucket = dayBuckets[tabKey];
+            const dObj = bucket.dateObj;
+            const y = dObj.getFullYear();
+            const m = dObj.getMonth();
+            const d = dObj.getDate();
+
+            // 1. Exact-date matches from ESPN
+            bucket.exact.forEach(({ fx, leagueCfg }) => {
+                const startMs = fx.rawDate.getTime();
+                const endMs = startMs + MATCH_DURATION_MS;
+                const matchTitle = `${fx.team1.name} vs ${fx.team2.name}`;
+                const servers = getServersForMatch(matchTitle, leagueCfg.preferredChannel);
+
+                const matchObj = {
+                    id: `${fx.id}-${tabKey}`,
+                    league: leagueCfg.name,
+                    leagueKey: leagueCfg.key,
+                    sport: 'Soccer',
+                    isHot: leagueCfg.isHotLeague,
+                    team1: fx.team1,
+                    team2: fx.team2,
+                    score1: fx.score1,
+                    score2: fx.score2,
+                    commentator: leagueCfg.broadcaster,
+                    channelName: servers[0]?.label || 'Server 1 HD',
+                    servers: servers,
+                    tabCategory: tabKey,
+                    startMs: startMs,
+                    endMs: endMs,
+                    sortTime: startMs,
+                    isMappedDate: false,
+                    apiState: fx.apiState,
+                    apiCompleted: fx.apiCompleted,
+                    status: 'upcoming',
+                    timeStr: ''
+                };
+                matchObj.status = computeMatchStatus(matchObj, nowMs);
+                matchObj.timeStr = formatMatchTimeDisplay(matchObj, matchObj.status);
+                builtMatches.push(matchObj);
+            });
+
+            // 2. Dynamically scheduled matches for this day across the 24-hour time slots
+            // Interleave leagues so every time window has a rich variety of major leagues
+            const mappedList = bucket.mapped.slice().sort((a, b) => (a.orderKey || 0) - (b.orderKey || 0));
+            const totalSlots = DAILY_TIME_SLOTS.length;
+
+            mappedList.forEach(({ fx, leagueCfg }, idx) => {
+                // Deterministically spread matches across all 24h slots for this dayNum
+                const slotIdx = Math.floor((idx * totalSlots) / Math.max(mappedList.length, 1)) % totalSlots;
+                const rotatedSlotIdx = (slotIdx + (bucket.dayNum % 5 + 5) % 5) % totalSlots;
+                const slot = DAILY_TIME_SLOTS[rotatedSlotIdx];
+
+                const kickoffDate = new Date(y, m, d, slot.hh, slot.mm, 0, 0);
+                const startMs = kickoffDate.getTime();
+                const endMs = startMs + MATCH_DURATION_MS;
+
+                const matchTitle = `${fx.team1.name} vs ${fx.team2.name}`;
+                const servers = getServersForMatch(matchTitle, leagueCfg.preferredChannel);
+
+                const matchObj = {
+                    id: `${fx.id}-${tabKey}`,
+                    league: leagueCfg.name,
+                    leagueKey: leagueCfg.key,
+                    sport: 'Soccer',
+                    isHot: leagueCfg.isHotLeague,
+                    team1: fx.team1,
+                    team2: fx.team2,
+                    commentator: leagueCfg.broadcaster,
+                    channelName: servers[0]?.label || 'Server 1 HD',
+                    servers: servers,
+                    tabCategory: tabKey,
+                    startMs: startMs,
+                    endMs: endMs,
+                    sortTime: startMs,
+                    isMappedDate: true,
+                    apiState: 'pre',
+                    apiCompleted: false,
+                    status: 'upcoming',
+                    timeStr: ''
+                };
+                matchObj.status = computeMatchStatus(matchObj, nowMs);
+                matchObj.timeStr = formatMatchTimeDisplay(matchObj, matchObj.status);
+                builtMatches.push(matchObj);
             });
         });
 
-        allMatches = combined;
+        allMatches = builtMatches;
+        refreshAllMatchStatuses();
         renderMatches();
 
-        // Start 60s background auto-refresh if not started
+        // Background data sync every 60s
         if (!refreshTimer) {
             refreshTimer = setInterval(() => {
-                loadData(true);
+                loadData();
             }, 60000);
+        }
+
+        // Real-time status badge tick every 20s so matches transition to/from "Live" at exact kickoff/fulltime
+        if (!statusTickTimer) {
+            statusTickTimer = setInterval(() => {
+                if (refreshAllMatchStatuses()) {
+                    renderMatches();
+                }
+            }, 20000);
         }
     }
 
@@ -633,37 +741,34 @@
         const container = document.getElementById('matches-container');
         if (!container) return;
 
-        // Apply both Date Filter AND Sport Category Filter
-        let filtered = allMatches.filter(match => {
+        // Apply Date Filter AND League/Category Filter
+        const filtered = allMatches.filter(match => {
             // 1. Date Filter
             if (currentTab !== 'all' && match.tabCategory !== currentTab) {
                 return false;
             }
 
-            // 2. Sport Category Filter
-            if (currentCategory === 'all') return true;
+            // 2. Category / League Filter
+            if (currentCategory === 'all' || currentCategory === 'Soccer') return true;
             if (currentCategory === 'live') return match.status === 'live';
             if (currentCategory === 'hot') return match.isHot || match.status === 'live';
 
-            return (match.sport && match.sport.toLowerCase() === currentCategory.toLowerCase());
+            return (
+                (match.leagueKey && match.leagueKey.toLowerCase() === currentCategory.toLowerCase()) ||
+                (match.league && match.league.toLowerCase().includes(currentCategory.toLowerCase()))
+            );
         });
 
-        // Fallback if combination has no matches in the current date tab
         if (filtered.length === 0) {
-            filtered = allMatches.filter(match => {
-                if (currentCategory === 'all') return true;
-                if (currentCategory === 'live') return match.status === 'live';
-                if (currentCategory === 'hot') return match.isHot || match.status === 'live';
-                return (match.sport && match.sport.toLowerCase() === currentCategory.toLowerCase());
-            });
-        }
+            const emptyMsg = currentCategory === 'live'
+                ? 'Belum ada pertandingan yang sedang tayang (Live) pada jadwal ini.'
+                : `Tidak ada pertandingan untuk kategori <strong>${escapeHTML(currentCategory)}</strong>.`;
 
-        if (filtered.length === 0) {
             container.innerHTML = `
                 <div class="matches-empty">
                     <i class="far fa-calendar-times" style="font-size: 36px; margin-bottom: 12px; opacity: 0.6;"></i>
-                    <p>Tidak ada pertandingan untuk kategori <strong>${escapeHTML(currentCategory)}</strong>.</p>
-                    <button onclick="window.resetFilters()">Lihat Semua Pertandingan</button>
+                    <p>${emptyMsg}</p>
+                    <button onclick="window.resetFilters()">Lihat Semua Jadwal Hari Ini</button>
                 </div>
             `;
             return;
@@ -673,14 +778,14 @@
             const isPlaying = currentPlayingMatch && currentPlayingMatch.id === match.id;
             const activeClass = isPlaying ? 'card-active' : '';
 
-            // Status Badge
+            // Status Badge:
+            // ONLY show "Live" badge if match is genuinely airing right now (match.status === 'live').
+            // If match has not started yet (match.status === 'upcoming'), do NOT show the "Live" text.
             let statusBadge = '';
             if (match.status === 'live') {
                 statusBadge = `<span class="match-status-badge status-live"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i> Live</span>`;
             } else if (match.status === 'ended') {
                 statusBadge = `<span class="match-status-badge status-ended">Selesai</span>`;
-            } else {
-                statusBadge = `<span class="match-status-badge status-upcoming">Segera Dimulai</span>`;
             }
 
             return `
@@ -777,6 +882,7 @@
         const nowPlayingBar = document.getElementById('now-playing-bar');
         const playingTitle = document.getElementById('playing-title');
         const serverChips = document.getElementById('server-chips');
+        const liveDot = nowPlayingBar ? nowPlayingBar.querySelector('.live-dot') : null;
 
         if (placeholder) placeholder.style.display = 'none';
         if (iframe) {
@@ -786,7 +892,10 @@
 
         if (nowPlayingBar && playingTitle) {
             nowPlayingBar.style.display = 'flex';
-            playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} (${match.league || 'Live HD'})`;
+            if (liveDot) {
+                liveDot.style.display = match.status === 'live' ? 'inline-block' : 'none';
+            }
+            playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} (${match.league || 'HD'})`;
         }
 
         // Render Server Chips
@@ -796,7 +905,7 @@
                     label: srv.label || `Server ${idx + 1}`,
                     url: formatServerUrl(srv.url, match.channelName, matchTitle)
                 }))
-                : getServersForSport(match.sport || 'Soccer', matchTitle);
+                : getServersForMatch(matchTitle);
 
             serverChips.innerHTML = availableServers.map((srv, i) => {
                 const sUrl = srv.url || streamUrl;
@@ -845,6 +954,13 @@
 
         if (liveBtn) {
             liveBtn.addEventListener('click', () => {
+                // Live Event shows currently live matches (today)
+                if (currentTab === 'tomorrow' || currentTab === 'yesterday') {
+                    currentTab = 'today';
+                    document.querySelectorAll('.filter-btn').forEach(b => {
+                        b.classList.toggle('active', b.getAttribute('data-tab') === 'today');
+                    });
+                }
                 setCategoryActive(liveBtn, 'live');
             });
         }
@@ -897,14 +1013,24 @@
                 b.classList.remove('active');
             }
         });
+
+        // If user switches to tomorrow or yesterday while on 'live' filter, switch category to 'all'
+        // so that day's schedule is immediately visible
+        if ((tab === 'tomorrow' || tab === 'yesterday') && currentCategory === 'live') {
+            currentCategory = 'all';
+            document.querySelectorAll('.category-freeze, .category-button').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-category') === 'all');
+            });
+        }
+
         renderMatches();
     };
 
     window.resetFilters = function () {
-        currentTab = 'all';
+        currentTab = 'today';
         currentCategory = 'all';
         document.querySelectorAll('.filter-btn').forEach(b => {
-            b.classList.toggle('active', b.getAttribute('data-tab') === 'all');
+            b.classList.toggle('active', b.getAttribute('data-tab') === 'today');
         });
         document.querySelectorAll('.category-freeze, .category-button').forEach(b => {
             b.classList.toggle('active', b.getAttribute('data-category') === 'all');
@@ -932,8 +1058,9 @@
         const placeholder = document.getElementById('player-placeholder');
         if (placeholder) {
             placeholder.addEventListener('click', () => {
-                if (allMatches.length > 0) {
-                    playMatch(allMatches[0]);
+                const liveMatch = allMatches.find(m => m.status === 'live') || allMatches[0];
+                if (liveMatch) {
+                    playMatch(liveMatch);
                 }
             });
         }

@@ -37,29 +37,24 @@ const VERIFIED_FTA_CHANNELS = {
     },
     "KTV": {
         "url": "https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/index.m3u8"
-    },
-    "TVRI NASIONAL": {
-        "url": "https://ott-balancer.tvri.go.id/live/eds/Nasional/hls/Nasional.m3u8"
-    },
-    "TVRI WORLD": {
-        "url": "https://ott-balancer.tvri.go.id/live/eds/TVRIWorld/hls/TVRIWorld.m3u8"
-    },
-    "A KOMPASTV": {
-        "url": "https://op-flashcon-digdayahd-1.dens.tv/s/s104/index.m3u8"
-    },
-    "A METROTV": {
-        "url": "https://op-flashcon-digdayahd-1.dens.tv/h/h12/index.m3u8"
-    },
-    "A TV ONE": {
-        "url": "https://op-flashcon-digdayahd-1.dens.tv/h/h40/index.m3u8"
-    },
-    "A MDTV": {
-        "url": "https://op-flashcon-digdayahd-1.dens.tv/h/h223/index.m3u8"
-    },
-    "DW ENGLISH": {
-        "url": "https://dwamdstream102.akamaized.net/hls/live/2015525/dwstream102/index.m3u8"
     }
 };
+
+const MAJOR_LEAGUES = [
+    { slug: 'idn.1', key: 'Indo', name: 'BRI Liga 1 Indonesia', max: 6 },
+    { slug: 'eng.1', key: 'Inggris', name: 'Liga Inggris (Premier League)', max: 9 },
+    { slug: 'ita.1', key: 'Italia', name: 'Liga Italia (Serie A)', max: 9 },
+    { slug: 'fra.1', key: 'Perancis', name: 'Liga Perancis (Ligue 1)', max: 6 },
+    { slug: 'esp.1', key: 'Spanyol', name: 'Liga Spanyol (LaLiga)', max: 9 },
+    { slug: 'ned.1', key: 'Belanda', name: 'Liga Belanda (Eredivisie)', max: 6 },
+    { slug: 'por.1', key: 'Portugal', name: 'Liga Portugal (Primeira Liga)', max: 6 },
+    { slug: 'ger.1', key: 'Jerman', name: 'Liga Jerman (Bundesliga)', max: 6 },
+    { slug: 'uefa.champions', key: 'UCL', name: 'Liga Champions (UCL)', max: 9 },
+    { slug: 'eng.2', key: 'Championship', name: 'Championship League (EFL)', max: 6 },
+    { slug: 'uefa.europa', key: 'Championship', name: 'UEFA Europa League', max: 6 },
+    { slug: 'uefa.europa.conf', key: 'Konferensi', name: 'UEFA Conference League', max: 6 },
+    { slug: 'aff.championship', key: 'AFF', name: 'AFF ASEAN Championship', max: 6 }
+];
 
 async function sync() {
     const dataDir = path.join(__dirname, '..', 'data');
@@ -67,17 +62,21 @@ async function sync() {
         fs.mkdirSync(dataDir, { recursive: true });
     }
 
-    console.log('Fetching latest sports schedule from public ESPN Scoreboard API & TheSportsDB...');
+    console.log('Fetching major football leagues schedule from ESPN Scoreboard API...');
 
-    const [uclRes, nbaRes, soccerRes] = await Promise.all([
-        fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/uefa.champions/scoreboard').then(r => r.json()).catch(() => ({ events: [] })),
-        fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard').then(r => r.json()).catch(() => ({ events: [] })),
-        fetch('https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard').then(r => r.json()).catch(() => ({ events: [] }))
-    ]);
+    const responses = await Promise.all(
+        MAJOR_LEAGUES.map(lg =>
+            fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${lg.slug}/scoreboard`)
+                .then(r => r.json())
+                .catch(() => ({ events: [] }))
+        )
+    );
 
     const events = [];
-    const mapEspn = (list, defaultLeague) => {
-        (list || []).slice(0, 15).forEach(ev => {
+
+    MAJOR_LEAGUES.forEach((lg, idx) => {
+        const list = (responses[idx] && responses[idx].events) || [];
+        list.slice(0, lg.max).forEach(ev => {
             const comp = ev.competitions && ev.competitions[0];
             const competitors = (comp && comp.competitors) || [];
             const home = competitors.find(c => c.homeAway === 'home') || competitors[0] || {};
@@ -87,8 +86,9 @@ async function sync() {
             const timeStr = dt.toTimeString().slice(0, 5);
             events.push({
                 id: `espn-${ev.id}`,
-                duration: 3,
-                league: comp?.league?.name || defaultLeague,
+                duration: 2,
+                league: lg.name,
+                leagueKey: lg.key,
                 team1: {
                     name: home.team?.shortDisplayName || home.team?.name || 'Team 1',
                     logo: home.team?.logo || 'images/sportsicon/Soccer.png'
@@ -103,11 +103,7 @@ async function sync() {
                 match_time: timeStr
             });
         });
-    };
-
-    mapEspn(uclRes.events, 'UEFA Champions League');
-    mapEspn(nbaRes.events, 'NBA');
-    mapEspn(soccerRes.events, 'World Football');
+    });
 
     let existingUsop = {};
     const usopPath = path.join(dataDir, 'usop.json');
@@ -123,7 +119,7 @@ async function sync() {
     fs.writeFileSync(usopPath, JSON.stringify(mergedUsop, null, 2), 'utf8');
 
     console.log('Successfully updated local fallback data/:');
-    console.log(' - events.json:', events.length, 'matches');
+    console.log(' - events.json:', events.length, 'major league matches');
     console.log(' - usop.json:', Object.keys(mergedUsop).length, 'channels');
 }
 
