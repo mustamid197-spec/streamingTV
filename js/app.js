@@ -13,8 +13,9 @@
     let currentCategory = 'all'; // 'all', 'live', 'hot', or league key ('Indo', 'Inggris', 'Italia', 'Perancis', 'Spanyol', 'Belanda', 'Portugal', 'Jerman', 'UCL', 'Championship', 'Konferensi', 'AFF')
     let currentPlayingMatch = null;
     let currentPlayingServerUrl = null;
+    let isShowingPreview = false;
     let refreshTimer = null;
-    let statusTickTimer = null;
+    let tickerInterval = null;
 
     // Match duration: 2 hours (120 minutes) for live window calculation
     const MATCH_DURATION_MS = 2 * 60 * 60 * 1000;
@@ -412,6 +413,74 @@
         return baseTime;
     }
 
+    function formatCountdownShort(diffMs) {
+        if (diffMs <= 0) return 'Kickoff Sekarang';
+        const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+        if (days > 0) {
+            return `Dimulai dlm ${days}h ${hours}j`;
+        }
+        if (hours > 0) {
+            return `Dimulai dlm ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        return `Dimulai dlm ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function updateScreenCountdown() {
+        if (!currentPlayingMatch || currentPlayingMatch.status !== 'upcoming') return;
+        const nowMs = Date.now();
+        const diffMs = currentPlayingMatch.startMs - nowMs;
+
+        if (diffMs <= 0) {
+            currentPlayingMatch.status = 'live';
+            refreshAllMatchStatuses();
+            renderMatches();
+            playMatch(currentPlayingMatch, currentPlayingServerUrl, false);
+            return;
+        }
+
+        const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+        const cdDays = document.getElementById('cd-days');
+        const cdHours = document.getElementById('cd-hours');
+        const cdMinutes = document.getElementById('cd-minutes');
+        const cdSeconds = document.getElementById('cd-seconds');
+
+        if (cdDays) cdDays.textContent = String(days).padStart(2, '0');
+        if (cdHours) cdHours.textContent = String(hours).padStart(2, '0');
+        if (cdMinutes) cdMinutes.textContent = String(minutes).padStart(2, '0');
+        if (cdSeconds) cdSeconds.textContent = String(seconds).padStart(2, '0');
+
+        const playingTitle = document.getElementById('playing-title');
+        if (playingTitle && currentPlayingMatch.status === 'upcoming') {
+            const timeStr = days > 0
+                ? `${days}h ${hours}j ${minutes}m`
+                : `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            const previewTag = isShowingPreview ? ' [Live Preview]' : '';
+            playingTitle.textContent = `${currentPlayingMatch.team1.name} vs ${currentPlayingMatch.team2.name} (Kickoff dlm ${timeStr})${previewTag}`;
+        }
+    }
+
+    function updateAllCardTimers() {
+        const nowMs = Date.now();
+        document.querySelectorAll('.status-countdown[data-start]').forEach(el => {
+            const startMs = Number(el.getAttribute('data-start'));
+            if (!isNaN(startMs)) {
+                const diffMs = startMs - nowMs;
+                const textEl = el.querySelector('.card-countdown-text');
+                if (textEl) {
+                    textEl.textContent = formatCountdownShort(diffMs);
+                }
+            }
+        });
+    }
+
     function refreshAllMatchStatuses() {
         const nowMs = Date.now();
         let changed = false;
@@ -724,13 +793,26 @@
             }, 60000);
         }
 
-        // Real-time status badge tick every 20s so matches transition to/from "Live" at exact kickoff/fulltime
-        if (!statusTickTimer) {
-            statusTickTimer = setInterval(() => {
+        // Real-time second ticker (1s):
+        // 1. Ticks on-screen countdown timestamps (Hari, Jam, Menit, Detik)
+        // 2. Ticks card countdown badges in the schedule list
+        // 3. Auto-removes finished matches immediately ("jadwal selesai auto hilang")
+        // 4. Transitions upcoming matches to Live at exact kickoff
+        if (!tickerInterval) {
+            tickerInterval = setInterval(() => {
+                updateScreenCountdown();
+                updateAllCardTimers();
                 if (refreshAllMatchStatuses()) {
                     renderMatches();
+                    // If current playing match ended while viewing, update title
+                    if (currentPlayingMatch && currentPlayingMatch.status === 'ended') {
+                        const playingTitle = document.getElementById('playing-title');
+                        if (playingTitle) {
+                            playingTitle.textContent = `${currentPlayingMatch.team1.name} vs ${currentPlayingMatch.team2.name} (Pertandingan Telah Selesai)`;
+                        }
+                    }
                 }
-            }, 20000);
+            }, 1000);
         }
     }
 
@@ -741,6 +823,8 @@
         const container = document.getElementById('matches-container');
         if (!container) return;
 
+        const nowMs = Date.now();
+
         // Apply Date Filter AND League/Category Filter
         const filtered = allMatches.filter(match => {
             // 1. Date Filter
@@ -748,7 +832,13 @@
                 return false;
             }
 
-            // 2. Category / League Filter
+            // 2. Auto-hide finished matches ("jika jadwal sudah selesai auto hilang saja")
+            // Finished matches are completely excluded on today, tomorrow, all, and all category tabs!
+            if (match.status === 'ended' && currentTab !== 'yesterday') {
+                return false;
+            }
+
+            // 3. Category / League Filter
             if (currentCategory === 'all' || currentCategory === 'Soccer') return true;
             if (currentCategory === 'live') return match.status === 'live';
             if (currentCategory === 'hot') return match.isHot || match.status === 'live';
@@ -762,13 +852,13 @@
         if (filtered.length === 0) {
             const emptyMsg = currentCategory === 'live'
                 ? 'Belum ada pertandingan yang sedang tayang (Live) pada jadwal ini.'
-                : `Tidak ada pertandingan untuk kategori <strong>${escapeHTML(currentCategory)}</strong>.`;
+                : 'Semua pertandingan untuk jadwal ini telah selesai atau belum dimulai.';
 
             container.innerHTML = `
                 <div class="matches-empty">
-                    <i class="far fa-calendar-times" style="font-size: 36px; margin-bottom: 12px; opacity: 0.6;"></i>
+                    <i class="far fa-calendar-check" style="font-size: 36px; margin-bottom: 12px; color: #10b981;"></i>
                     <p>${emptyMsg}</p>
-                    <button onclick="window.resetFilters()">Lihat Semua Jadwal Hari Ini</button>
+                    <button onclick="window.switchTab('tomorrow')">Lihat Jadwal Pertandingan Besok</button>
                 </div>
             `;
             return;
@@ -779,13 +869,18 @@
             const activeClass = isPlaying ? 'card-active' : '';
 
             // Status Badge:
-            // ONLY show "Live" badge if match is genuinely airing right now (match.status === 'live').
-            // If match has not started yet (match.status === 'upcoming'), do NOT show the "Live" text.
+            // 1. If match is LIVE: glowing red Live badge
+            // 2. If match is UPCOMING: countdown timestamp badge menuju jadwalnya
+            // 3. If match is ENDED (only on yesterday archive tab): Selesai badge
             let statusBadge = '';
             if (match.status === 'live') {
                 statusBadge = `<span class="match-status-badge status-live"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i> Live</span>`;
             } else if (match.status === 'ended') {
                 statusBadge = `<span class="match-status-badge status-ended">Selesai</span>`;
+            } else if (match.status === 'upcoming') {
+                const diffMs = match.startMs - nowMs;
+                const cdText = formatCountdownShort(diffMs);
+                statusBadge = `<span class="match-status-badge status-countdown" data-start="${match.startMs}"><i class="far fa-clock"></i> <span class="card-countdown-text">${escapeHTML(cdText)}</span></span>`;
             }
 
             return `
@@ -856,8 +951,9 @@
         return `player.html?url=${encodeURIComponent(srvUrl)}${titleParam}`;
     }
 
-    function playMatch(match, targetUrl = null) {
+    function playMatch(match, targetUrl = null, forcePreview = false) {
         currentPlayingMatch = match;
+        isShowingPreview = Boolean(forcePreview);
         const matchTitle = `${match.team1.name} vs ${match.team2.name}`;
 
         let streamUrl = targetUrl;
@@ -879,24 +975,99 @@
         // UI Updates
         const placeholder = document.getElementById('player-placeholder');
         const iframe = document.getElementById('video-iframe');
+        const countdownScreen = document.getElementById('player-countdown-screen');
         const nowPlayingBar = document.getElementById('now-playing-bar');
         const playingTitle = document.getElementById('playing-title');
         const serverChips = document.getElementById('server-chips');
-        const liveDot = nowPlayingBar ? nowPlayingBar.querySelector('.live-dot') : null;
+        const liveDot = document.getElementById('live-indicator-dot');
+        const cdIndicatorDot = document.getElementById('cd-indicator-dot');
+        const toggleScreenBtn = document.getElementById('toggle-screen-btn');
 
         if (placeholder) placeholder.style.display = 'none';
-        if (iframe) {
-            iframe.style.display = 'block';
-            iframe.src = streamUrl;
+
+        if (match.status === 'live') {
+            // Live match: show stream video directly
+            if (countdownScreen) countdownScreen.style.display = 'none';
+            if (iframe) {
+                iframe.style.display = 'block';
+                if (iframe.src !== streamUrl) iframe.src = streamUrl;
+            }
+            if (liveDot) liveDot.style.display = 'inline-block';
+            if (cdIndicatorDot) cdIndicatorDot.style.display = 'none';
+            if (toggleScreenBtn) toggleScreenBtn.style.display = 'none';
+            if (playingTitle) {
+                playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} (${match.league || 'Live HD'})`;
+            }
+        } else if (match.status === 'upcoming') {
+            // Upcoming match ("belum jadwalnya"):
+            if (isShowingPreview) {
+                // User explicitly clicked Live Preview: show video stream
+                if (countdownScreen) countdownScreen.style.display = 'none';
+                if (iframe) {
+                    iframe.style.display = 'block';
+                    if (iframe.src !== streamUrl) iframe.src = streamUrl;
+                }
+                if (liveDot) liveDot.style.display = 'none';
+                if (cdIndicatorDot) cdIndicatorDot.style.display = 'inline-flex';
+                if (toggleScreenBtn) {
+                    toggleScreenBtn.style.display = 'inline-flex';
+                    toggleScreenBtn.innerHTML = '<i class="fas fa-hourglass-half"></i> Hitung Mundur';
+                }
+                if (playingTitle) {
+                    playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} [Live Preview]`;
+                }
+            } else {
+                // Default: show countdown screen with timestamps on player screen ("di layarnya ada informasi timestamps menuju jadwalnya")
+                if (iframe) {
+                    iframe.style.display = 'none';
+                }
+                if (countdownScreen) {
+                    countdownScreen.style.display = 'flex';
+
+                    // Update screen data
+                    const leagueEl = document.getElementById('cd-league-text');
+                    const kickoffEl = document.getElementById('cd-kickoff-text');
+                    const t1Logo = document.getElementById('cd-team1-logo');
+                    const t1Name = document.getElementById('cd-team1-name');
+                    const t2Logo = document.getElementById('cd-team2-logo');
+                    const t2Name = document.getElementById('cd-team2-name');
+
+                    if (leagueEl) leagueEl.textContent = match.league || 'Sepak Bola';
+                    if (kickoffEl) {
+                        const dayPrefix = match.tabCategory === 'tomorrow' ? 'Besok, ' : 'Hari ini, ';
+                        kickoffEl.innerHTML = `<i class="far fa-clock"></i> ${dayPrefix}${match.timeStr} WIB`;
+                    }
+                    if (t1Logo) t1Logo.src = match.team1.logo || 'images/sportsicon/Soccer.png';
+                    if (t1Name) t1Name.textContent = match.team1.name;
+                    if (t2Logo) t2Logo.src = match.team2.logo || 'images/sportsicon/Soccer.png';
+                    if (t2Name) t2Name.textContent = match.team2.name;
+
+                    updateScreenCountdown();
+                }
+
+                if (liveDot) liveDot.style.display = 'none';
+                if (cdIndicatorDot) cdIndicatorDot.style.display = 'inline-flex';
+                if (toggleScreenBtn) {
+                    toggleScreenBtn.style.display = 'inline-flex';
+                    toggleScreenBtn.innerHTML = '<i class="fas fa-tv"></i> Live Preview';
+                }
+            }
+        } else {
+            // Ended match (e.g. from yesterday tab)
+            if (countdownScreen) countdownScreen.style.display = 'none';
+            if (iframe) {
+                iframe.style.display = 'block';
+                if (iframe.src !== streamUrl) iframe.src = streamUrl;
+            }
+            if (liveDot) liveDot.style.display = 'none';
+            if (cdIndicatorDot) cdIndicatorDot.style.display = 'none';
+            if (toggleScreenBtn) toggleScreenBtn.style.display = 'none';
+            if (playingTitle) {
+                playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} (Pertandingan Telah Selesai)`;
+            }
         }
 
-        if (nowPlayingBar && playingTitle) {
-            nowPlayingBar.style.display = 'flex';
-            if (liveDot) {
-                liveDot.style.display = match.status === 'live' ? 'inline-block' : 'none';
-            }
-            playingTitle.textContent = `${match.team1.name} vs ${match.team2.name} (${match.league || 'HD'})`;
-        }
+        if (nowPlayingBar) nowPlayingBar.style.display = 'flex';
 
         // Render Server Chips
         if (serverChips) {
@@ -919,7 +1090,8 @@
                     serverChips.querySelectorAll('.server-chip-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     const url = btn.getAttribute('data-url');
-                    playMatch(match, url);
+                    // Clicking server button directly activates video preview
+                    playMatch(match, url, true);
                 });
             });
         }
@@ -1058,9 +1230,31 @@
         const placeholder = document.getElementById('player-placeholder');
         if (placeholder) {
             placeholder.addEventListener('click', () => {
-                const liveMatch = allMatches.find(m => m.status === 'live') || allMatches[0];
-                if (liveMatch) {
-                    playMatch(liveMatch);
+                const liveMatch = allMatches.find(m => m.status === 'live');
+                const nextMatch = allMatches.find(m => m.status === 'upcoming');
+                const target = liveMatch || nextMatch || allMatches[0];
+                if (target) {
+                    playMatch(target);
+                }
+            });
+        }
+
+        // Preview button inside countdown screen
+        const cdBtnPreview = document.getElementById('cd-btn-preview');
+        if (cdBtnPreview) {
+            cdBtnPreview.addEventListener('click', () => {
+                if (currentPlayingMatch) {
+                    playMatch(currentPlayingMatch, currentPlayingServerUrl, true);
+                }
+            });
+        }
+
+        // Toggle button in now-playing bar
+        const toggleScreenBtn = document.getElementById('toggle-screen-btn');
+        if (toggleScreenBtn) {
+            toggleScreenBtn.addEventListener('click', () => {
+                if (currentPlayingMatch) {
+                    playMatch(currentPlayingMatch, currentPlayingServerUrl, !isShowingPreview);
                 }
             });
         }

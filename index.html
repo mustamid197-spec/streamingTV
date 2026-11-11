@@ -79,13 +79,86 @@
                     allow="autoplay; encrypted-media; picture-in-picture"
                     style="display: none;"
                 ></iframe>
+
+                <!-- Match Countdown / Upcoming Screen (Timestamps Menuju Jadwal) -->
+                <div class="player-countdown-screen" id="player-countdown-screen" style="display: none;">
+                    <div class="countdown-screen-bg"></div>
+                    <div class="countdown-screen-content">
+                        <!-- Top League & Kickoff Meta -->
+                        <div class="countdown-top-meta">
+                            <span class="countdown-league-badge" id="cd-league">
+                                <i class="fas fa-trophy" style="color: #eab308;"></i> <span id="cd-league-text">Liga</span>
+                            </span>
+                            <span class="countdown-kickoff-time" id="cd-kickoff-text">
+                                <i class="far fa-clock"></i> Pukul 19.30 WIB
+                            </span>
+                        </div>
+
+                        <!-- Matchup Teams -->
+                        <div class="countdown-matchup">
+                            <div class="countdown-team-box team-home">
+                                <img id="cd-team1-logo" src="images/sportsicon/Soccer.png" class="cd-team-logo" alt="" onerror="this.onerror=null; this.src='images/sportsicon/Soccer.png'">
+                                <span class="cd-team-name" id="cd-team1-name">Tim 1</span>
+                            </div>
+                            <div class="countdown-vs-badge">VS</div>
+                            <div class="countdown-team-box team-away">
+                                <img id="cd-team2-logo" src="images/sportsicon/Soccer.png" class="cd-team-logo" alt="" onerror="this.onerror=null; this.src='images/sportsicon/Soccer.png'">
+                                <span class="cd-team-name" id="cd-team2-name">Tim 2</span>
+                            </div>
+                        </div>
+
+                        <!-- Countdown Timer Grid -->
+                        <div class="countdown-timer-section">
+                            <div class="countdown-timer-title">
+                                <i class="fas fa-hourglass-half"></i> SIARAN DIMULAI DALAM
+                            </div>
+                            <div class="countdown-timer-grid">
+                                <div class="cd-time-unit">
+                                    <strong id="cd-days">00</strong>
+                                    <span>HARI</span>
+                                </div>
+                                <div class="cd-colon">:</div>
+                                <div class="cd-time-unit">
+                                    <strong id="cd-hours">00</strong>
+                                    <span>JAM</span>
+                                </div>
+                                <div class="cd-colon">:</div>
+                                <div class="cd-time-unit">
+                                    <strong id="cd-minutes">00</strong>
+                                    <span>MENIT</span>
+                                </div>
+                                <div class="cd-colon">:</div>
+                                <div class="cd-time-unit cd-unit-seconds">
+                                    <strong id="cd-seconds">00</strong>
+                                    <span>DETIK</span>
+                                </div>
+                            </div>
+                            <div class="countdown-notice">
+                                <i class="fas fa-satellite-dish"></i> Siaran langsung akan tayang otomatis saat kick-off
+                            </div>
+                        </div>
+
+                        <!-- Action Bar inside countdown screen -->
+                        <div class="countdown-action-bar">
+                            <button class="cd-btn-preview" id="cd-btn-preview" title="Tonton siaran saluran sekarang">
+                                <i class="fas fa-tv"></i> Tonton Saluran Live Preview
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Now Playing & Server Switch Bar -->
             <div class="now-playing-bar" id="now-playing-bar" style="display: none;">
                 <div class="now-playing-info">
-                    <span class="live-dot"></span>
+                    <span class="live-dot" id="live-indicator-dot"></span>
+                    <span class="countdown-dot" id="cd-indicator-dot" style="display: none;"><i class="fas fa-stopwatch" style="color: #38bdf8;"></i></span>
                     <span class="playing-title" id="playing-title">Memutar Siaran Live</span>
+                </div>
+                <div class="now-playing-actions">
+                    <button class="now-playing-toggle-btn" id="toggle-screen-btn" style="display: none;">
+                        <i class="fas fa-hourglass-half"></i> Hitung Mundur
+                    </button>
                 </div>
                 <div class="server-chips" id="server-chips">
                     <!-- Dynamic server buttons inserted here -->

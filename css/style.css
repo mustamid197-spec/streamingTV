@@ -308,6 +308,256 @@ body.dark-theme .toggle-thumb {
     background: #000;
 }
 
+/* =========================================================
+   Player Countdown / Upcoming Match Screen (Timestamps)
+   ========================================================= */
+.player-countdown-screen {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    background: radial-gradient(circle at 50% 20%, rgba(15, 23, 42, 0.95) 0%, rgba(2, 6, 23, 0.98) 100%);
+    color: #ffffff;
+    padding: clamp(8px, 2vw, 20px);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.countdown-screen-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.15), transparent 50%),
+        radial-gradient(circle at 85% 85%, rgba(239, 68, 68, 0.12), transparent 50%);
+    pointer-events: none;
+}
+
+.countdown-screen-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 650px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    gap: clamp(4px, 1vw, 10px);
+    text-align: center;
+}
+
+/* Top Meta (League & Kickoff Time) */
+.countdown-top-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: clamp(6px, 1.2vw, 12px);
+}
+
+.countdown-league-badge {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    padding: clamp(3px, 0.5vw, 5px) clamp(8px, 1.2vw, 12px);
+    border-radius: 20px;
+    font-size: clamp(10px, 1.3vw, 12.5px);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+}
+
+.countdown-kickoff-time {
+    color: #e2e8f0;
+    font-size: clamp(10px, 1.3vw, 13px);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(30, 41, 59, 0.65);
+    padding: clamp(3px, 0.5vw, 5px) clamp(8px, 1.2vw, 12px);
+    border-radius: 20px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Matchup Teams */
+.countdown-matchup {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    width: 100%;
+    max-width: 560px;
+    gap: clamp(8px, 1.8vw, 18px);
+}
+
+.countdown-team-box {
+    display: flex;
+    align-items: center;
+    gap: clamp(6px, 1.2vw, 12px);
+    min-width: 0;
+}
+
+.countdown-team-box.team-home {
+    justify-content: flex-end;
+    text-align: right;
+}
+
+.countdown-team-box.team-away {
+    justify-content: flex-start;
+    text-align: left;
+}
+
+.cd-team-logo {
+    width: clamp(28px, 5vw, 50px);
+    height: clamp(28px, 5vw, 50px);
+    object-fit: contain;
+    flex-shrink: 0;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
+}
+
+.cd-team-name {
+    font-size: clamp(12px, 1.9vw, 17px);
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+.countdown-vs-badge {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    font-size: clamp(10px, 1.2vw, 12px);
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: clamp(3px, 0.5vw, 5px) clamp(6px, 1vw, 10px);
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    flex-shrink: 0;
+}
+
+/* Timer Section */
+.countdown-timer-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(3px, 0.6vw, 6px);
+    width: 100%;
+}
+
+.countdown-timer-title {
+    font-size: clamp(9px, 1.1vw, 11px);
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.countdown-timer-grid {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(3px, 0.8vw, 8px);
+}
+
+.cd-time-unit {
+    background: linear-gradient(180deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.98));
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    border-radius: clamp(6px, 0.9vw, 9px);
+    padding: clamp(4px, 0.7vw, 8px) clamp(6px, 1.3vw, 14px);
+    min-width: clamp(40px, 6.5vw, 70px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.cd-time-unit strong {
+    font-size: clamp(18px, 3.5vw, 32px);
+    font-weight: 800;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+}
+
+.cd-time-unit span {
+    font-size: clamp(7.5px, 0.9vw, 9.5px);
+    font-weight: 700;
+    color: #94a3b8;
+    letter-spacing: 0.8px;
+    margin-top: clamp(2px, 0.3vw, 3px);
+}
+
+.cd-unit-seconds {
+    border-color: rgba(239, 68, 68, 0.55);
+}
+
+.cd-unit-seconds strong {
+    color: #38bdf8;
+    text-shadow: 0 0 14px rgba(56, 189, 248, 0.65);
+}
+
+.cd-colon {
+    font-size: clamp(16px, 2.8vw, 24px);
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: clamp(6px, 0.9vw, 10px);
+}
+
+.countdown-notice {
+    font-size: clamp(8.5px, 1vw, 11px);
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    opacity: 0.85;
+}
+
+/* Action button inside screen */
+.countdown-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cd-btn-preview {
+    background: rgba(30, 41, 59, 0.85);
+    color: #e2e8f0;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    padding: clamp(5px, 0.7vw, 7px) clamp(10px, 1.5vw, 18px);
+    border-radius: 20px;
+    font-size: clamp(10px, 1.2vw, 12.5px);
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.2s ease;
+}
+
+.cd-btn-preview:hover {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #38bdf8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.45);
+}
+
 /* Now Playing Bar */
 .now-playing-bar {
     display: flex;
@@ -331,12 +581,44 @@ body.dark-theme .toggle-thumb {
     color: var(--text-primary);
 }
 
+.now-playing-actions {
+    display: flex;
+    align-items: center;
+}
+
+.now-playing-toggle-btn {
+    background: var(--bg-sub-bar);
+    color: var(--text-primary);
+    border: 1px solid var(--card-border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.now-playing-toggle-btn:hover {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+}
+
 .live-dot {
     width: 10px;
     height: 10px;
     background-color: #ef4444;
     border-radius: 50%;
     animation: live-blink 1.2s infinite;
+}
+
+.countdown-dot {
+    display: inline-flex;
+    align-items: center;
+    font-size: 13px;
 }
 
 @keyframes live-blink {
@@ -740,6 +1022,24 @@ body.dark-theme .category-button.active {
 .status-ended {
     background-color: #64748b;
     color: #f1f5f9;
+}
+
+.status-countdown {
+    background-color: rgba(2, 132, 199, 0.12);
+    color: #0284c7;
+    border: 1px solid rgba(2, 132, 199, 0.3);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-variant-numeric: tabular-nums;
+    font-size: 11px;
+}
+
+body.dark-theme .status-countdown {
+    background-color: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.35);
 }
 
 /* Team 2 (Right) */
